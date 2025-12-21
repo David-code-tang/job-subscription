@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Job, JobFilters, Subscription } from '@/types/database'
 
 export async function getJobs(filters: JobFilters = {}): Promise<{
@@ -64,15 +65,14 @@ export async function getFilterOptions(): Promise<{
   departments: string[]
   locations: string[]
 }> {
-  const supabase = await createClient()
+  // 使用管理员客户端绕过 RLS，获取所有筛选选项
+  const supabase = createAdminClient()
 
-  // 使用 RPC 或分批查询获取所有唯一值
-  // 由于 RLS 限制，我们需要获取足够多的数据
   const [types, companies, departments, locations] = await Promise.all([
-    supabase.from('jobs').select('type').limit(10000),
-    supabase.from('jobs').select('company').limit(10000),
-    supabase.from('jobs').select('department').limit(10000),
-    supabase.from('jobs').select('location').limit(10000),
+    supabase.from('jobs').select('type'),
+    supabase.from('jobs').select('company'),
+    supabase.from('jobs').select('department'),
+    supabase.from('jobs').select('location'),
   ])
 
   // 去重并排序
