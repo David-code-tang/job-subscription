@@ -32,12 +32,12 @@ export async function getJobs(filters: JobFilters = {}): Promise<{
     query = query.eq('location', filters.location)
   }
   if (filters.search) {
-    query = query.ilike('job_title', `%${filters.search}%`)
+    query = query.ilike('title', `%${filters.search}%`)
   }
 
   // 排序和分页
   query = query
-    .order('update_date', { ascending: false, nullsFirst: false })
+    .order('updated_date', { ascending: false, nullsFirst: false })
     .range(offset, offset + pageSize - 1)
 
   const { data, count, error } = await query
