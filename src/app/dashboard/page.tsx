@@ -9,6 +9,7 @@ import { JobTable } from '@/components/job-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Lock } from 'lucide-react'
+import type { SortDirection } from '@/types/database'
 
 interface DashboardPageProps {
   searchParams: Promise<{
@@ -18,6 +19,8 @@ interface DashboardPageProps {
     location?: string
     search?: string
     page?: string
+    sortBy?: string
+    sortDir?: string
   }>
 }
 
@@ -41,6 +44,8 @@ async function JobsContent({ searchParams }: { searchParams: DashboardPageProps[
       location: params.location,
       search: params.search,
       page,
+      sortBy: params.sortBy,
+      sortDir: params.sortDir as SortDirection,
     }),
     getFilterOptions(),
   ])

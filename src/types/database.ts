@@ -29,6 +29,8 @@ export interface Profile {
   updated_at: string
 }
 
+export type SortDirection = 'asc' | 'desc' | null
+
 export interface JobFilters {
   type?: string
   company?: string
@@ -37,4 +39,6 @@ export interface JobFilters {
   search?: string
   page?: number
   pageSize?: number
+  sortBy?: string
+  sortDir?: SortDirection
 }

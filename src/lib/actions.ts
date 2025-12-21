@@ -35,10 +35,13 @@ export async function getJobs(filters: JobFilters = {}): Promise<{
     query = query.ilike('title', `%${filters.search}%`)
   }
 
-  // 排序和分页
-  query = query
-    .order('updated_date', { ascending: false, nullsFirst: false })
-    .range(offset, offset + pageSize - 1)
+  // 排序
+  const sortBy = filters.sortBy || 'updated_date'
+  const sortDir = filters.sortDir || 'desc'
+  query = query.order(sortBy, { ascending: sortDir === 'asc', nullsFirst: false })
+
+  // 分页
+  query = query.range(offset, offset + pageSize - 1)
 
   const { data, count, error } = await query
 
@@ -63,18 +66,20 @@ export async function getFilterOptions(): Promise<{
 }> {
   const supabase = await createClient()
 
+  // 使用 RPC 或分批查询获取所有唯一值
+  // 由于 RLS 限制，我们需要获取足够多的数据
   const [types, companies, departments, locations] = await Promise.all([
-    supabase.from('jobs').select('type').order('type'),
-    supabase.from('jobs').select('company').order('company'),
-    supabase.from('jobs').select('department').order('department'),
-    supabase.from('jobs').select('location').order('location'),
+    supabase.from('jobs').select('type').limit(10000),
+    supabase.from('jobs').select('company').limit(10000),
+    supabase.from('jobs').select('department').limit(10000),
+    supabase.from('jobs').select('location').limit(10000),
   ])
 
-  // 去重
-  const uniqueTypes = [...new Set(types.data?.map(t => t.type).filter(Boolean))]
-  const uniqueCompanies = [...new Set(companies.data?.map(c => c.company).filter(Boolean))]
-  const uniqueDepartments = [...new Set(departments.data?.map(d => d.department).filter(Boolean))]
-  const uniqueLocations = [...new Set(locations.data?.map(l => l.location).filter(Boolean))]
+  // 去重并排序
+  const uniqueTypes = [...new Set(types.data?.map(t => t.type).filter(Boolean))].sort()
+  const uniqueCompanies = [...new Set(companies.data?.map(c => c.company).filter(Boolean))].sort()
+  const uniqueDepartments = [...new Set(departments.data?.map(d => d.department).filter(Boolean))].sort()
+  const uniqueLocations = [...new Set(locations.data?.map(l => l.location).filter(Boolean))].sort()
 
   return {
     types: uniqueTypes as string[],

@@ -99,7 +99,7 @@ export function JobFilters({ types, companies, departments, locations }: JobFilt
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全部公司</SelectItem>
-            {companies.slice(0, 50).map((company) => (
+            {companies.map((company) => (
               <SelectItem key={company} value={company}>
                 {company}
               </SelectItem>
@@ -117,7 +117,7 @@ export function JobFilters({ types, companies, departments, locations }: JobFilt
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全部部门</SelectItem>
-            {departments.slice(0, 50).map((dept) => (
+            {departments.map((dept) => (
               <SelectItem key={dept} value={dept}>
                 {dept}
               </SelectItem>
