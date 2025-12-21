@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useCallback, useRef } from 'react'
 import {
   Table,
   TableBody,
@@ -21,9 +22,30 @@ interface JobTableProps {
   pageSize: number
 }
 
+interface ColumnConfig {
+  key: string
+  label: string
+  minWidth: number
+  defaultWidth: number
+}
+
+const columns: ColumnConfig[] = [
+  { key: 'type', label: '行业', minWidth: 80, defaultWidth: 120 },
+  { key: 'company', label: '公司', minWidth: 100, defaultWidth: 150 },
+  { key: 'title', label: '岗位名称', minWidth: 150, defaultWidth: 280 },
+  { key: 'department', label: '部门', minWidth: 80, defaultWidth: 150 },
+  { key: 'location', label: '地点', minWidth: 60, defaultWidth: 100 },
+  { key: 'updated_date', label: '更新日期', minWidth: 90, defaultWidth: 110 },
+  { key: 'link', label: '申请链接', minWidth: 70, defaultWidth: 80 },
+]
+
 export function JobTable({ jobs, total, page, pageSize }: JobTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(
+    columns.reduce((acc, col) => ({ ...acc, [col.key]: col.defaultWidth }), {})
+  )
+  const resizingRef = useRef<{ key: string; startX: number; startWidth: number } | null>(null)
 
   const totalPages = Math.ceil(total / pageSize)
 
@@ -48,6 +70,32 @@ export function JobTable({ jobs, total, page, pageSize }: JobTableProps) {
     }
   }
 
+  const handleMouseDown = useCallback((e: React.MouseEvent, key: string) => {
+    e.preventDefault()
+    resizingRef.current = {
+      key,
+      startX: e.clientX,
+      startWidth: columnWidths[key],
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizingRef.current) return
+      const diff = e.clientX - resizingRef.current.startX
+      const col = columns.find(c => c.key === resizingRef.current!.key)
+      const newWidth = Math.max(col?.minWidth || 50, resizingRef.current.startWidth + diff)
+      setColumnWidths(prev => ({ ...prev, [resizingRef.current!.key]: newWidth }))
+    }
+
+    const handleMouseUp = () => {
+      resizingRef.current = null
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }, [columnWidths])
+
   return (
     <div className="space-y-4">
       {/* 结果统计 */}
@@ -61,17 +109,29 @@ export function JobTable({ jobs, total, page, pageSize }: JobTableProps) {
       </div>
 
       {/* 表格 */}
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
+      <div className="border rounded-lg overflow-x-auto">
+        <Table style={{ tableLayout: 'fixed', minWidth: '900px' }}>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="w-[120px]">行业</TableHead>
-              <TableHead className="w-[150px]">公司</TableHead>
-              <TableHead>岗位名称</TableHead>
-              <TableHead className="w-[150px]">部门</TableHead>
-              <TableHead className="w-[100px]">地点</TableHead>
-              <TableHead className="w-[110px]">更新日期</TableHead>
-              <TableHead className="w-[80px] text-center">申请</TableHead>
+              {columns.map((col, index) => (
+                <TableHead
+                  key={col.key}
+                  style={{ width: columnWidths[col.key], position: 'relative' }}
+                  className="select-none"
+                >
+                  <div className="flex items-center justify-between pr-2">
+                    <span>{col.label}</span>
+                  </div>
+                  {index < columns.length - 1 && (
+                    <div
+                      className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-400 group"
+                      onMouseDown={(e) => handleMouseDown(e, col.key)}
+                    >
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-gray-300 rounded group-hover:bg-blue-500" />
+                    </div>
+                  )}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -84,30 +144,32 @@ export function JobTable({ jobs, total, page, pageSize }: JobTableProps) {
             ) : (
               jobs.map((job) => (
                 <TableRow key={job.id} className="hover:bg-gray-50">
-                  <TableCell>
-                    <Badge variant="secondary" className="text-xs">
-                      {job.type}
+                  <TableCell style={{ width: columnWidths['type'] }}>
+                    <Badge variant="secondary" className="text-xs truncate max-w-full">
+                      {job.type || '-'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium">{job.company}</TableCell>
-                  <TableCell className="max-w-[300px]">
-                    <span className="line-clamp-2" title={job.job_title}>
-                      {job.job_title}
+                  <TableCell style={{ width: columnWidths['company'] }} className="font-medium truncate">
+                    {job.company}
+                  </TableCell>
+                  <TableCell style={{ width: columnWidths['title'] }}>
+                    <span className="line-clamp-2" title={job.title}>
+                      {job.title}
                     </span>
                   </TableCell>
-                  <TableCell className="text-gray-600 text-sm">
+                  <TableCell style={{ width: columnWidths['department'] }} className="text-gray-600 text-sm truncate">
                     {job.department || '-'}
                   </TableCell>
-                  <TableCell className="text-gray-600 text-sm">
+                  <TableCell style={{ width: columnWidths['location'] }} className="text-gray-600 text-sm truncate">
                     {job.location || '-'}
                   </TableCell>
-                  <TableCell className="text-gray-600 text-sm">
-                    {formatDate(job.update_date)}
+                  <TableCell style={{ width: columnWidths['updated_date'] }} className="text-gray-600 text-sm">
+                    {formatDate(job.updated_date)}
                   </TableCell>
-                  <TableCell className="text-center">
-                    {job.job_url ? (
+                  <TableCell style={{ width: columnWidths['link'] }} className="text-center">
+                    {job.link ? (
                       <a
-                        href={job.job_url}
+                        href={job.link}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-100 transition-colors"

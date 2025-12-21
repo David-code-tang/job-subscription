@@ -2,10 +2,10 @@ export interface Job {
   id: string
   type: string
   company: string
-  job_title: string
-  update_date: string | null
+  title: string
+  updated_date: string | null
   department: string | null
-  job_url: string | null
+  link: string | null
   location: string | null
   created_at: string
 }
@@ -13,9 +13,6 @@ export interface Job {
 export interface Subscription {
   id: string
   user_id: string
-  stripe_customer_id: string | null
-  stripe_subscription_id: string | null
-  stripe_price_id: string | null
   plan_id: string | null
   status: 'active' | 'canceled' | 'expired' | 'inactive'
   current_period_start: string | null
