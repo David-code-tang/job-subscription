@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { checkSubscriptionActive } from '@/lib/actions'
 import { Header } from '@/components/header'
-import { FeishuTable } from '@/components/feishu-table'
+import { S2Table } from '@/components/s2-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Lock } from 'lucide-react'
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
           <p className="text-sm text-gray-600">浏览和筛选最新招聘岗位</p>
         </div>
 
-        <FeishuTable />
+        <S2Table />
       </main>
     </div>
   )
