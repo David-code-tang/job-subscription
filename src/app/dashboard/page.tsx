@@ -70,10 +70,10 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header user={user} />
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">岗位列表</h1>
-          <p className="text-gray-600">浏览和筛选最新招聘岗位</p>
+      <main className="container mx-auto px-2 py-4">
+        <div className="mb-3 px-2">
+          <h1 className="text-xl font-bold">岗位列表</h1>
+          <p className="text-sm text-gray-600">浏览和筛选最新招聘岗位</p>
         </div>
 
         <FeishuTable />

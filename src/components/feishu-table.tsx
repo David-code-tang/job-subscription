@@ -39,31 +39,32 @@ export function FeishuTable() {
 
   if (loading) {
     return (
-      <Card className="w-full h-[600px] flex items-center justify-center">
+      <div className="w-full h-[calc(100vh-140px)] flex items-center justify-center bg-white rounded-lg border">
         <div className="text-gray-500">加载中...</div>
-      </Card>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Card className="w-full p-8">
+      <div className="w-full p-8 bg-white rounded-lg border">
         <div className="text-red-500 text-center">
           加载失败: {error}
         </div>
-      </Card>
+      </div>
     )
   }
 
   return (
-    <Card className="w-full h-[calc(100vh-200px)] min-h-[600px] overflow-hidden">
+    <div className="w-full h-[calc(100vh-140px)] bg-white rounded-lg border overflow-hidden">
       <iframe
         src={feishuUrl!}
         className="w-full h-full border-0"
         title="岗位列表"
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
         referrerPolicy="no-referrer"
+        allowFullScreen
       />
-    </Card>
+    </div>
   )
 }
