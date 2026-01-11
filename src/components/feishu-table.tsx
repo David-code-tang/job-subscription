@@ -57,25 +57,32 @@ export function FeishuTable() {
 
   return (
     <div className="w-full h-[calc(100vh-140px)] bg-white rounded-lg border overflow-hidden relative">
-      {/* 工具栏遮挡层 - 白色背景覆盖顶部 120px */}
+      {/* 工具栏遮挡层 - 使用渐变和阴影实现自然过渡 */}
       <div
-        className="absolute top-0 left-0 right-0 bg-white border-b border-gray-200"
+        className="absolute top-0 left-0 right-0 z-10 pointer-events-none"
         style={{
-          height: '120px',
-          zIndex: 10
+          height: '100px',
+          background: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.98) 60%, rgba(255,255,255,0.95) 80%, rgba(255,255,255,0.9) 95%, rgba(255,255,255,0) 100%)',
+          backdropFilter: 'blur(2px)',
         }}
         aria-hidden="true"
       />
 
-      {/* iframe - 正常定位，无需负边距 */}
-      <iframe
-        src={feishuUrl!}
-        className="w-full h-full border-0"
-        title="岗位列表"
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
-        referrerPolicy="no-referrer"
-        allowFullScreen
-      />
+      {/* iframe - 向下偏移以被遮挡层覆盖 */}
+      <div
+        className="absolute inset-0"
+        style={{ marginTop: '100px' }}
+      >
+        <iframe
+          src={feishuUrl!}
+          className="w-full h-full border-0"
+          style={{ height: 'calc(100% + 100px)' }}
+          title="岗位列表"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
+          referrerPolicy="no-referrer"
+          allowFullScreen
+        />
+      </div>
     </div>
   )
 }
