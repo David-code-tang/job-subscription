@@ -57,47 +57,38 @@ export function FeishuTable() {
 
   return (
     <div className="w-full h-[calc(100vh-140px)] bg-white rounded-lg border overflow-hidden relative">
-      {/* 工具栏遮挡层 - 设计为看起来像表格的标题栏 */}
+      {/* 工具栏遮挡层 - 白色覆盖但添加设计元素 */}
       <div
-        className="absolute top-0 left-0 right-0 z-10 pointer-events-none bg-white border-b border-gray-200"
+        className="absolute top-0 left-0 right-0 bg-white z-10 border-b border-gray-200"
         style={{
           height: '120px',
-          paddingTop: '16px',
-          paddingLeft: '20px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)',
         }}
         aria-hidden="true"
       >
-        {/* 模拟表格标题 */}
-        <div className="flex items-center justify-between">
+        {/* 设计内容让遮挡看起来是有意的 */}
+        <div className="h-full flex items-center justify-between px-6">
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">岗位信息</h2>
-            <p className="text-sm text-gray-500 mt-1">实时更新 · 数据来源于飞书多维表格</p>
+            <h3 className="text-lg font-semibold text-gray-700">岗位信息库</h3>
+            <p className="text-xs text-gray-400 mt-0.5">实时数据 · 自动同步</p>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <span className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-              实时同步
-            </span>
+          <div className="flex items-center space-x-3">
+            <div className="text-right">
+              <div className="text-xs text-gray-400">最后更新</div>
+              <div className="text-sm font-medium text-gray-600">刚刚</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* iframe - 向下偏移 120px */}
-      <div
-        className="absolute inset-0"
-        style={{ marginTop: '120px' }}
-      >
-        <iframe
-          src={feishuUrl!}
-          className="w-full h-full border-0"
-          style={{ height: 'calc(100% + 120px)' }}
-          title="岗位列表"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
-          referrerPolicy="no-referrer"
-          allowFullScreen
-        />
-      </div>
+      {/* iframe - 正常显示 */}
+      <iframe
+        src={feishuUrl!}
+        className="w-full h-full border-0"
+        title="岗位列表"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
+        referrerPolicy="no-referrer"
+        allowFullScreen
+      />
     </div>
   )
 }
