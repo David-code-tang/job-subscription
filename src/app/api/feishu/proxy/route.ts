@@ -58,8 +58,8 @@ export async function GET() {
     )
   }
 
-  // 返回飞书 URL（添加隐藏工具栏参数）
-  let feishuUrl = process.env.FEISHU_BASE_URL
+  // 返回飞书 URL
+  const feishuUrl = process.env.FEISHU_BASE_URL
 
   if (!feishuUrl) {
     return NextResponse.json(
@@ -68,14 +68,5 @@ export async function GET() {
     )
   }
 
-  // 尝试多种参数隐藏飞书工具栏（分享、自动化等按钮）
-  const url = new URL(feishuUrl)
-  // 方法1: hide 参数
-  url.searchParams.set('hide', 'toolbar,header')
-  // 方法2: embed 参数（用于嵌入模式）
-  url.searchParams.set('embed', 'true')
-  // 方法3: minimal 参数（精简模式）
-  url.searchParams.set('theme', 'minimal')
-
-  return NextResponse.json({ url: url.toString() })
+  return NextResponse.json({ url: feishuUrl })
 }
