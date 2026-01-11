@@ -57,23 +57,25 @@ export function FeishuTable() {
 
   return (
     <div className="w-full h-[calc(100vh-140px)] bg-white rounded-lg border overflow-hidden relative">
-      {/* 增强工具栏隐藏 - 使用120px确保完全覆盖 */}
+      {/* 工具栏遮挡层 - 白色背景覆盖顶部 120px */}
       <div
-        className="absolute inset-0"
+        className="absolute top-0 left-0 right-0 bg-white border-b border-gray-200"
         style={{
-          marginTop: '-120px',
-          paddingTop: '120px',
+          height: '120px',
+          zIndex: 10
         }}
-      >
-        <iframe
-          src={feishuUrl!}
-          className="w-full h-full border-0"
-          title="岗位列表"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
-          referrerPolicy="no-referrer"
-          allowFullScreen
-        />
-      </div>
+        aria-hidden="true"
+      />
+
+      {/* iframe - 正常定位，无需负边距 */}
+      <iframe
+        src={feishuUrl!}
+        className="w-full h-full border-0"
+        title="岗位列表"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
+        referrerPolicy="no-referrer"
+        allowFullScreen
+      />
     </div>
   )
 }
