@@ -5,8 +5,15 @@ export async function middleware(request: NextRequest) {
   return await updateSession(request)
 }
 
+// Only run middleware on specific paths that need auth
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Run middleware on these paths
+    '/dashboard/:path*',
+    '/account/:path*',
+    '/login/:path*',
+    '/register/:path*',
+    '/forgot-password/:path*',
+    '/admin/:path*',
   ],
 }

@@ -1,64 +1,14 @@
-import { Suspense } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getJobs, getFilterOptions, checkSubscriptionActive } from '@/lib/actions'
+import { checkSubscriptionActive } from '@/lib/actions'
 import { Header } from '@/components/header'
-import { JobFilters } from '@/components/job-filters'
-import { JobTable } from '@/components/job-table'
+import { FeishuTable } from '@/components/feishu-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Lock } from 'lucide-react'
-import type { SortDirection } from '@/types/database'
 
-interface DashboardPageProps {
-  searchParams: Promise<{
-    type?: string
-    company?: string
-    department?: string
-    location?: string
-    search?: string
-    page?: string
-    sortBy?: string
-    sortDir?: string
-  }>
-}
-
-function LoadingTable() {
-  return (
-    <div className="border rounded-lg p-8 text-center text-gray-500">
-      加载中...
-    </div>
-  )
-}
-
-async function JobsContent({ searchParams }: { searchParams: DashboardPageProps['searchParams'] }) {
-  const params = await searchParams
-  const page = parseInt(params.page || '1', 10)
-
-  const [{ jobs, total, pageSize }, filterOptions] = await Promise.all([
-    getJobs({
-      type: params.type,
-      company: params.company,
-      department: params.department,
-      location: params.location,
-      search: params.search,
-      page,
-      sortBy: params.sortBy,
-      sortDir: params.sortDir as SortDirection,
-    }),
-    getFilterOptions(),
-  ])
-
-  return (
-    <>
-      <JobFilters {...filterOptions} />
-      <JobTable jobs={jobs} total={total} page={page} pageSize={pageSize} />
-    </>
-  )
-}
-
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -126,9 +76,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <p className="text-gray-600">浏览和筛选最新招聘岗位</p>
         </div>
 
-        <Suspense fallback={<LoadingTable />}>
-          <JobsContent searchParams={searchParams} />
-        </Suspense>
+        <FeishuTable />
       </main>
     </div>
   )
