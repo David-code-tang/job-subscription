@@ -58,8 +58,8 @@ export async function GET() {
     )
   }
 
-  // 返回飞书 URL
-  const feishuUrl = process.env.FEISHU_BASE_URL
+  // 返回飞书 URL（添加隐藏工具栏参数）
+  let feishuUrl = process.env.FEISHU_BASE_URL
 
   if (!feishuUrl) {
     return NextResponse.json(
@@ -68,5 +68,9 @@ export async function GET() {
     )
   }
 
-  return NextResponse.json({ url: feishuUrl })
+  // 添加参数隐藏飞书工具栏（分享、自动化等按钮）
+  const url = new URL(feishuUrl)
+  url.searchParams.set('hide', 'toolbar')
+
+  return NextResponse.json({ url: url.toString() })
 }
