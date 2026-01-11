@@ -68,9 +68,14 @@ export async function GET() {
     )
   }
 
-  // 添加参数隐藏飞书工具栏（分享、自动化等按钮）
+  // 尝试多种参数隐藏飞书工具栏（分享、自动化等按钮）
   const url = new URL(feishuUrl)
-  url.searchParams.set('hide', 'toolbar')
+  // 方法1: hide 参数
+  url.searchParams.set('hide', 'toolbar,header')
+  // 方法2: embed 参数（用于嵌入模式）
+  url.searchParams.set('embed', 'true')
+  // 方法3: minimal 参数（精简模式）
+  url.searchParams.set('theme', 'minimal')
 
   return NextResponse.json({ url: url.toString() })
 }
