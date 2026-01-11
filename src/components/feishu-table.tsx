@@ -57,26 +57,41 @@ export function FeishuTable() {
 
   return (
     <div className="w-full h-[calc(100vh-140px)] bg-white rounded-lg border overflow-hidden relative">
-      {/* 工具栏遮挡层 - 使用渐变和阴影实现自然过渡 */}
+      {/* 工具栏遮挡层 - 设计为看起来像表格的标题栏 */}
       <div
-        className="absolute top-0 left-0 right-0 z-10 pointer-events-none"
+        className="absolute top-0 left-0 right-0 z-10 pointer-events-none bg-white border-b border-gray-200"
         style={{
-          height: '100px',
-          background: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.98) 60%, rgba(255,255,255,0.95) 80%, rgba(255,255,255,0.9) 95%, rgba(255,255,255,0) 100%)',
-          backdropFilter: 'blur(2px)',
+          height: '120px',
+          paddingTop: '16px',
+          paddingLeft: '20px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)',
         }}
         aria-hidden="true"
-      />
+      >
+        {/* 模拟表格标题 */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">岗位信息</h2>
+            <p className="text-sm text-gray-500 mt-1">实时更新 · 数据来源于飞书多维表格</p>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <span className="flex items-center">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+              实时同步
+            </span>
+          </div>
+        </div>
+      </div>
 
-      {/* iframe - 向下偏移以被遮挡层覆盖 */}
+      {/* iframe - 向下偏移 120px */}
       <div
         className="absolute inset-0"
-        style={{ marginTop: '100px' }}
+        style={{ marginTop: '120px' }}
       >
         <iframe
           src={feishuUrl!}
           className="w-full h-full border-0"
-          style={{ height: 'calc(100% + 100px)' }}
+          style={{ height: 'calc(100% + 120px)' }}
           title="岗位列表"
           sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
           referrerPolicy="no-referrer"
