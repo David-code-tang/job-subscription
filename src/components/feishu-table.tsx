@@ -57,8 +57,8 @@ export function FeishuTable() {
 
   return (
     <div className="w-full h-[calc(100vh-140px)] bg-white rounded-lg border overflow-hidden relative">
-      {/* 使用负边距隐藏顶部工具栏 */}
-      <div className="absolute inset-0 -mt-12 pt-12">
+      {/* 使用负边距隐藏顶部工具栏 - 增加到60px以完全隐藏 */}
+      <div className="absolute inset-0 -mt-16 pt-16">
         <iframe
           src={feishuUrl!}
           className="w-full h-full border-0"
