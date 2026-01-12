@@ -1,8 +1,2 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/sync-feishu",
-      "schedule": "0 */6 * * *"
-    }
-  ]
 }
