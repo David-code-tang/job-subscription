@@ -61,7 +61,7 @@ export async function GET(request: Request) {
   // 获取查询参数
   const { searchParams } = new URL(request.url)
   const page = parseInt(searchParams.get('page') || '1')
-  const pageSize = parseInt(searchParams.get('pageSize') || '50')
+  const pageSize = parseInt(searchParams.get('pageSize') || '10000') // 默认获取所有数据
   const offset = (page - 1) * pageSize
 
   // 从 Supabase 获取数据

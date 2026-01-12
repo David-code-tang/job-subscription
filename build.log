@@ -1,0 +1,56 @@
+
+> job-subscription@0.1.0 build
+> next build --webpack
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/davidtang/Coding/Job_lists_web/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/davidtang/Coding/Job_lists_web/job-subscription/package-lock.json
+
+▲ Next.js 16.1.0 (webpack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (131kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+✓ Compiled successfully in 6.3s
+  Running TypeScript ...
+  Collecting page data using 9 workers ...
+  Generating static pages using 9 workers (0/22) ...
+  Generating static pages using 9 workers (5/22) 
+  Generating static pages using 9 workers (10/22) 
+  Generating static pages using 9 workers (16/22) 
+✓ Generating static pages using 9 workers (22/22) in 141.3ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /account
+├ ƒ /admin
+├ ƒ /admin/data
+├ ƒ /admin/settings
+├ ƒ /admin/sync
+├ ƒ /admin/users
+├ ƒ /api/admin/data
+├ ƒ /api/admin/users
+├ ƒ /api/auth/callback
+├ ƒ /api/cron/sync-feishu
+├ ƒ /api/feishu/proxy
+├ ƒ /api/jobs
+├ ƒ /dashboard
+├ ○ /forgot-password
+├ ○ /login
+├ ○ /pricing
+├ ○ /register
+└ ○ /test-table
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
