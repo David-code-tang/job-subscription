@@ -4,13 +4,17 @@ import { useEffect, useState } from 'react'
 import { useJobStore } from '@/lib/stores/job-store'
 import { TableHeader } from './table-header'
 import { TableBody } from './table-body'
+import { TableSkeleton } from './table-skeleton'
 import { JobFilters } from './job-filters'
-import { ExternalLink, Loader2, Download, Mail, Share2 } from 'lucide-react'
+import { ExternalLink, Loader2, Download, Mail, Share2, RefreshCw, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { exportSelectedJobs, exportFilteredJobs } from '@/lib/utils/export'
 
 export function JobTable() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
+  const [exporting, setExporting] = useState(false)
 
   // 从 store 获取数据和方法
   const {
@@ -51,39 +55,134 @@ export function JobTable() {
 
         const data = await response.json()
         setJobs(data.jobs || [], data.total || 0)
+        setError(null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+        setError(errorMessage)
+        console.error('Failed to fetch jobs:', errorMessage)
       } finally {
         setLoading(false)
       }
     }
 
     fetchJobs()
-  }, [setJobs])
+  }, [setJobs, retryCount])
 
+  const handleRetry = () => {
+    setLoading(true)
+    setError(null)
+    setRetryCount((prev) => prev + 1)
+  }
+
+  // 导出选中的岗位
+  const handleExportSelected = async () => {
+    if (selectedRows.length === 0) return
+
+    setExporting(true)
+    try {
+      const success = exportSelectedJobs(jobs, selectedRows, `selected-jobs-${Date.now()}.csv`)
+      if (!success) {
+        alert('导出失败，请重试')
+      }
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('导出失败，请重试')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // 导出所有筛选后的岗位
+  const handleExportAll = async () => {
+    setExporting(true)
+    try {
+      const success = exportFilteredJobs(filteredJobs, `jobs-${Date.now()}.csv`)
+      if (!success) {
+        alert('导出失败，请重试')
+      }
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('导出失败，请重试')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // 复制选中岗位的链接到剪贴板
+  const handleCopyLinks = async () => {
+    if (selectedRows.length === 0) return
+
+    const selectedJobs = jobs.filter((job) => selectedRows.includes(job.id))
+    const links = selectedJobs
+      .map((job) => {
+        if (!job.link) return null
+        return `${job.company} - ${job.title}: ${job.link}`
+      })
+      .filter(Boolean)
+      .join('\n')
+
+    try {
+      await navigator.clipboard.writeText(links)
+      alert(`已复制 ${selectedJobs.length} 个岗位链接到剪贴板`)
+    } catch (error) {
+      console.error('Copy failed:', error)
+      alert('复制失败，请重试')
+    }
+  }
+
+  // 加载状态 - 使用骨架屏
   if (loading) {
     return (
-      <div className="w-full h-[calc(100vh-140px)] flex items-center justify-center bg-white rounded-lg border">
-        <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
-        <span className="ml-3 text-gray-500">加载中...</span>
+      <div className="space-y-4">
+        <JobFilters />
+        <TableSkeleton />
       </div>
     )
   }
 
+  // 错误状态
   if (error) {
     return (
-      <div className="w-full p-8 bg-white rounded-lg border">
-        <div className="text-red-500 text-center">加载失败: {error}</div>
+      <div className="space-y-4">
+        <JobFilters />
+        <div className="bg-white border border-red-200 rounded-lg p-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">加载失败</h3>
+              <p className="text-sm text-gray-600 mt-1">{error}</p>
+            </div>
+            <Button onClick={handleRetry} variant="outline" className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              重试
+            </Button>
+          </div>
+        </div>
       </div>
     )
   }
 
+  // 空数据状态
   if (currentJobs.length === 0) {
     return (
-      <div className="w-full p-8 bg-white rounded-lg border">
-        <div className="text-center text-gray-500">
-          暂无数据
-          {total > 0 && `（共 ${total} 条记录，请调整筛选条件）`}
+      <div className="space-y-4">
+        <JobFilters />
+        <div className="bg-white border border-gray-200 rounded-lg p-12">
+          <div className="flex flex-col items-center justify-center text-center space-y-3">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-gray-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">暂无数据</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {total > 0
+                  ? `共 ${total} 条记录，请调整筛选条件`
+                  : '还没有岗位信息，请稍后再来查看'}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -96,24 +195,31 @@ export function JobTable() {
 
       {/* 批量操作栏 */}
       {selectedRows.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-center justify-between">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-blue-900">
               已选择 <span className="text-blue-600 font-bold">{selectedRows.length}</span> 个岗位
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="text-sm">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-sm"
+              onClick={handleExportSelected}
+              disabled={exporting}
+            >
               <Download className="h-4 w-4 mr-1" />
-              导出
+              导出选中
             </Button>
-            <Button variant="outline" size="sm" className="text-sm">
-              <Mail className="h-4 w-4 mr-1" />
-              发送邮件
-            </Button>
-            <Button variant="outline" size="sm" className="text-sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-sm"
+              onClick={handleCopyLinks}
+            >
               <Share2 className="h-4 w-4 mr-1" />
-              分享
+              复制链接
             </Button>
             <Button variant="ghost" size="sm" onClick={clearRowSelection} className="text-sm text-gray-600">
               取消选择
@@ -123,7 +229,7 @@ export function JobTable() {
       )}
 
       {/* 结果统计 */}
-      <div className="flex items-center justify-between text-sm text-gray-600">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600">
         <span>
           共找到 <span className="font-semibold">{total.toLocaleString()}</span> 个岗位
           {total !== filteredJobs.length && (
@@ -132,9 +238,23 @@ export function JobTable() {
             </span>
           )}
         </span>
-        <span>
-          第 {page} 页，共 {totalPages} 页
-        </span>
+        <div className="flex items-center gap-2">
+          <span>
+            第 {page} 页，共 {totalPages} 页
+          </span>
+          {filteredJobs.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-sm"
+              onClick={handleExportAll}
+              disabled={exporting}
+            >
+              <Download className="h-4 w-4 mr-1" />
+              导出全部
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* 表格 */}
