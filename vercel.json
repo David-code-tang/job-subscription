@@ -1,6 +1,4 @@
 {
-  "buildCommand": "cd job-subscription && npm run build",
-  "outputDirectory": "job-subscription/.next",
   "crons": [
     {
       "path": "/api/cron/sync-feishu",
