@@ -68,16 +68,17 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-blue-50">
       <Header user={user} />
       <main className="container mx-auto px-2 py-4">
+        {/* 明显的视觉提示 - 背景变成蓝色 */}
         <div className="mb-3 px-2 flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold">岗位列表</h1>
-            <p className="text-sm text-gray-600">浏览和筛选最新招聘岗位</p>
+            <h1 className="text-xl font-bold text-blue-900">🎉 NEW: 岗位列表 (AntV S2)</h1>
+            <p className="text-sm text-blue-600">浏览和筛选最新招聘岗位 - 使用开源 AntV S2 表格</p>
           </div>
-          <div className="text-xs text-gray-400">
-            Powered by AntV S2
+          <div className="text-sm font-bold text-blue-600 bg-white px-3 py-1 rounded-full">
+            ✨ AntV S2 Active
           </div>
         </div>
 
