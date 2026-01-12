@@ -14,11 +14,11 @@ export interface Job {
 }
 
 export interface JobFilters {
-  type?: string
-  company?: string
-  department?: string
-  location?: string
-  search?: string
+  keyword?: string
+  types?: string[]
+  companies?: string[]
+  departments?: string[]
+  locations?: string[]
 }
 
 export type SortDirection = 'asc' | 'desc' | null
@@ -93,27 +93,57 @@ export const useJobStore = create<JobStore>()(
         setFilters: (filters) =>
           set((state) => {
             const newFilters = { ...state.filters, ...filters }
-            const hasActiveFilters = Object.values(newFilters).some(
-              (value) => value !== undefined && value !== ''
-            )
+
+            // 检查是否有激活的过滤器
+            const hasActiveFilters =
+              (newFilters.keyword && newFilters.keyword.trim() !== '') ||
+              (newFilters.types && newFilters.types.length > 0) ||
+              (newFilters.companies && newFilters.companies.length > 0) ||
+              (newFilters.departments && newFilters.departments.length > 0) ||
+              (newFilters.locations && newFilters.locations.length > 0)
 
             // 应用筛选
             let filtered = state.jobs
-            if (newFilters.type) {
-              filtered = filtered.filter((job) => job.type === newFilters.type)
+
+            // 关键词搜索（公司名、岗位名称）
+            if (newFilters.keyword && newFilters.keyword.trim() !== '') {
+              const keyword = newFilters.keyword.toLowerCase().trim()
+              filtered = filtered.filter((job) => {
+                return (
+                  job.company?.toLowerCase().includes(keyword) ||
+                  job.title?.toLowerCase().includes(keyword) ||
+                  job.type?.toLowerCase().includes(keyword) ||
+                  job.department?.toLowerCase().includes(keyword) ||
+                  job.location?.toLowerCase().includes(keyword)
+                )
+              })
             }
-            if (newFilters.company) {
-              filtered = filtered.filter((job) => job.company === newFilters.company)
-            }
-            if (newFilters.department) {
-              filtered = filtered.filter((job) => job.department === newFilters.department)
-            }
-            if (newFilters.location) {
-              filtered = filtered.filter((job) => job.location === newFilters.location)
-            }
-            if (newFilters.search) {
+
+            // 行业类型筛选（多选）
+            if (newFilters.types && newFilters.types.length > 0) {
               filtered = filtered.filter((job) =>
-                job.title.toLowerCase().includes(newFilters.search!.toLowerCase())
+                newFilters.types!.includes(job.type)
+              )
+            }
+
+            // 公司筛选（多选）
+            if (newFilters.companies && newFilters.companies.length > 0) {
+              filtered = filtered.filter((job) =>
+                newFilters.companies!.includes(job.company)
+              )
+            }
+
+            // 部门筛选（多选）
+            if (newFilters.departments && newFilters.departments.length > 0) {
+              filtered = filtered.filter((job) =>
+                job.department && newFilters.departments!.includes(job.department)
+              )
+            }
+
+            // 地点筛选（多选）
+            if (newFilters.locations && newFilters.locations.length > 0) {
+              filtered = filtered.filter((job) =>
+                job.location && newFilters.locations!.includes(job.location)
               )
             }
 

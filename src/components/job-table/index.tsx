@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useJobStore } from '@/lib/stores/job-store'
 import { TableHeader } from './table-header'
 import { TableBody } from './table-body'
+import { JobFilters } from './job-filters'
 import { ExternalLink, Loader2 } from 'lucide-react'
 
 export function JobTable() {
@@ -12,6 +13,7 @@ export function JobTable() {
 
   // 从 store 获取数据和方法
   const {
+    jobs,
     filteredJobs,
     total,
     page,
@@ -21,7 +23,7 @@ export function JobTable() {
   } = useJobStore()
 
   // 计算分页
-  const totalPages = Math.ceil(total / pageSize)
+  const totalPages = Math.ceil(filteredJobs.length / pageSize)
   const startIndex = (page - 1) * pageSize
   const endIndex = startIndex + pageSize
   const currentJobs = filteredJobs.slice(startIndex, endIndex)
@@ -86,6 +88,9 @@ export function JobTable() {
 
   return (
     <div className="space-y-4">
+      {/* 筛选组件 */}
+      <JobFilters />
+
       {/* 结果统计 */}
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
