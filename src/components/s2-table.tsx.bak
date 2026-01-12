@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { SheetComponent } from '@antv/s2-react'
-import '@antv/s2-react/dist/style.min.css'
+// Temporarily remove CSS import due to LESS compilation issues
+// TODO: Add custom CSS styles for the table
+// import '@antv/s2-react/dist/style.min.css'
 
 interface Job {
   id: string

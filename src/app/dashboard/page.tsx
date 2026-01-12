@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { checkSubscriptionActive } from '@/lib/actions'
 import { Header } from '@/components/header'
-import { S2Table } from '@/components/s2-table'
+import { FeishuTable } from '@/components/feishu-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Lock } from 'lucide-react'
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
           <p className="text-green-600 text-xs mt-2">Git commit: ebffe9e</p>
         </div>
 
-        <S2Table />
+        <FeishuTable />
       </main>
     </div>
   )
