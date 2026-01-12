@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { checkSubscriptionActive } from '@/lib/actions'
 import { Header } from '@/components/header'
-import { FeishuTable } from '@/components/feishu-table'
+import { JobTable } from '@/components/job-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Lock } from 'lucide-react'
@@ -68,34 +68,16 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50">
+    <div className="min-h-screen bg-gray-50">
       <Header user={user} />
 
-      {/* 无法忽略的红色横幅 */}
-      <div className="bg-red-600 text-white text-center py-4 px-4 font-bold text-xl">
-        ⚠️ NEW VERSION ALERT: 如果你看到这个红色横幅，说明新代码已部署！
-      </div>
-
-      <main className="container mx-auto px-2 py-4">
-        {/* 明确的视觉提示 */}
-        <div className="mb-3 px-2 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold text-blue-900">🎉 NEW: 岗位列表 (AntV S2)</h1>
-            <p className="text-sm text-blue-600">浏览和筛选最新招聘岗位 - 使用开源 AntV S2 表格</p>
-          </div>
-          <div className="text-sm font-bold text-blue-600 bg-white px-3 py-1 rounded-full">
-            ✨ AntV S2 Active
-          </div>
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">岗位信息列表</h1>
+          <p className="text-sm text-gray-600 mt-1">浏览和筛选最新招聘岗位</p>
         </div>
 
-        {/* 绿色提示框 */}
-        <div className="bg-green-100 border-4 border-green-500 p-4 mb-4 rounded-lg">
-          <h2 className="text-lg font-bold text-green-800">✅ S2 组件区域</h2>
-          <p className="text-green-700 text-sm">下方的表格应该由 AntV S2 渲染，而不是飞书 iframe</p>
-          <p className="text-green-600 text-xs mt-2">Git commit: ebffe9e</p>
-        </div>
-
-        <FeishuTable />
+        <JobTable />
       </main>
     </div>
   )
