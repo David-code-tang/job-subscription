@@ -1,7 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { useJobStore } from '@/lib/stores/job-store'
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, GripVertical, Check } from 'lucide-react'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 interface ColumnConfig {
   key: string
@@ -10,7 +14,8 @@ interface ColumnConfig {
   sortable: boolean
 }
 
-const columns: ColumnConfig[] = [
+const allColumns: ColumnConfig[] = [
+  { key: 'select', label: '', width: 50, sortable: false },
   { key: 'type', label: '行业', width: 130, sortable: true },
   { key: 'company', label: '公司', width: 150, sortable: true },
   { key: 'title', label: '岗位名称', width: 300, sortable: true },
@@ -20,10 +25,131 @@ const columns: ColumnConfig[] = [
   { key: 'link', label: '申请链接', width: 90, sortable: false },
 ]
 
+// 可拖拽的列头组件
+interface DraggableHeaderProps {
+  col: ColumnConfig
+  onSort: (key: string) => void
+  onResizeStart: (key: string, startX: number) => void
+}
+
+function DraggableHeader({ col, onSort, onResizeStart }: DraggableHeaderProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: col.key,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className={`relative px-4 py-3 text-left text-sm font-medium text-gray-900 select-none border-b ${
+        col.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {/* 拖拽手柄 */}
+        <button
+          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+
+        {/* 列内容 */}
+        {col.key === 'select' ? (
+          <div
+            className="cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSort('select')
+            }}
+          >
+            <SelectAllCheckbox />
+          </div>
+        ) : (
+          <div
+            className="flex items-center gap-1 flex-1"
+            onClick={() => col.sortable && onSort(col.key)}
+          >
+            <span>{col.label}</span>
+            {col.sortable && <SortIcon columnKey={col.key} />}
+          </div>
+        )}
+      </div>
+
+      {/* 列宽调整手柄 */}
+      {col.key !== 'select' && col.key !== 'link' && (
+        <div
+          className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
+          onMouseDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onResizeStart(col.key, e.clientX)
+          }}
+        />
+      )}
+    </th>
+  )
+}
+
+// 全选复选框
+function SelectAllCheckbox() {
+  const { isAllSelected, selectedRows, filteredJobs, toggleAllRows } = useJobStore()
+  const isChecked = isAllSelected
+  const isIndeterminate = selectedRows.length > 0 && !isAllSelected
+
+  return (
+    <div className="relative w-5 h-5">
+      <input
+        type="checkbox"
+        checked={isChecked}
+        ref={(input) => {
+          if (input) {
+            input.indeterminate = isIndeterminate
+          }
+        }}
+        onChange={toggleAllRows}
+        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+      />
+    </div>
+  )
+}
+
+// 排序图标
+function SortIcon({ columnKey }: { columnKey: string }) {
+  const { sortBy, sortDir } = useJobStore()
+
+  if (sortBy !== columnKey) {
+    return <ArrowUpDown className="h-3 w-3 text-gray-400" />
+  }
+  if (sortDir === 'asc') {
+    return <ArrowUp className="h-3 w-3 text-blue-600" />
+  }
+  return <ArrowDown className="h-3 w-3 text-blue-600" />
+}
+
 export function TableHeader() {
-  const { sortBy, sortDir, columnWidths, setSort, updateColumnWidth } = useJobStore()
+  const { sortBy, sortDir, columnWidths, columnOrder, setSort, updateColumnWidth, updateColumnOrder } = useJobStore()
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   const handleSort = (columnKey: string) => {
+    if (columnKey === 'select') {
+      // 全选逻辑在 SelectAllCheckbox 中处理
+      return
+    }
+
     let newDir: 'asc' | 'desc' | null = 'asc'
 
     if (sortBy === columnKey) {
@@ -35,21 +161,22 @@ export function TableHeader() {
     }
 
     if (newDir === null) {
-      // 取消排序
       setSort('', null)
     } else {
       setSort(columnKey, newDir)
     }
   }
 
-  const getSortIcon = (columnKey: string) => {
-    if (sortBy !== columnKey) {
-      return <ArrowUpDown className="h-3 w-3 text-gray-400" />
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = columnOrder.indexOf(active.id as string)
+      const newIndex = columnOrder.indexOf(over.id as string)
+
+      const newOrder = arrayMove(columnOrder, oldIndex, newIndex)
+      updateColumnOrder(newOrder)
     }
-    if (sortDir === 'asc') {
-      return <ArrowUp className="h-3 w-3 text-blue-600" />
-    }
-    return <ArrowDown className="h-3 w-3 text-blue-600" />
   }
 
   const handleMouseDown = (columnKey: string, startX: number) => {
@@ -72,53 +199,25 @@ export function TableHeader() {
     document.addEventListener('mouseup', handleMouseUp)
   }
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '-'
-    try {
-      const parts = dateStr.split('/')
-      if (parts.length === 3) {
-        const [, month, day] = parts
-        return `${month}/${day}`
-      }
-      return dateStr
-    } catch {
-      return dateStr
-    }
-  }
+  // 根据 columnOrder 过滤并排序列
+  const orderedColumns = columnOrder.map((key) => allColumns.find((col) => col.key === key)!).filter(Boolean)
 
   return (
-    <thead className="bg-gray-50">
-      <tr>
-        {columns.map((col) => (
-          <th
-            key={col.key}
-            className={`relative px-4 py-3 text-left text-sm font-medium text-gray-900 select-none border-b ${
-              col.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
-            }`}
-            style={{ width: `${columnWidths[col.key]}px` }}
-          >
-            <div
-              className="flex items-center gap-1"
-              onClick={() => col.sortable && handleSort(col.key)}
-            >
-              <span>{col.label}</span>
-              {col.sortable && getSortIcon(col.key)}
-            </div>
-
-            {/* 列宽调整手柄 */}
-            {col.key !== 'link' && (
-              <div
-                className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  handleMouseDown(col.key, e.clientX)
-                }}
-              />
-            )}
-          </th>
-        ))}
-      </tr>
-    </thead>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <thead className="bg-gray-50">
+        <tr>
+          <SortableContext items={columnOrder} strategy={verticalListSortingStrategy}>
+            {orderedColumns.map((col) => (
+              <th
+                key={col.key}
+                style={{ width: `${columnWidths[col.key]}px` }}
+              >
+                <DraggableHeader col={col} onSort={handleSort} onResizeStart={handleMouseDown} />
+              </th>
+            ))}
+          </SortableContext>
+        </tr>
+      </thead>
+    </DndContext>
   )
 }

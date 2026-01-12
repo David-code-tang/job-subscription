@@ -43,7 +43,9 @@ interface JobStore {
 
   // UI 状态
   columnWidths: Record<string, number>
+  columnOrder: string[]
   selectedRows: string[]
+  isAllSelected: boolean
 
   // 操作方法
   setJobs: (jobs: Job[], total: number) => void
@@ -52,7 +54,9 @@ interface JobStore {
   setSort: (sortBy: string, sortDir: SortDirection) => void
   setPage: (page: number) => void
   updateColumnWidth: (columnId: string, width: number) => void
+  updateColumnOrder: (columnOrder: string[]) => void
   toggleRowSelection: (rowId: string) => void
+  toggleAllRows: () => void
   clearRowSelection: () => void
 }
 
@@ -71,6 +75,7 @@ export const useJobStore = create<JobStore>()(
         page: 1,
         pageSize: 20,
         columnWidths: {
+          select: 50,
           type: 130,
           company: 150,
           title: 300,
@@ -79,7 +84,9 @@ export const useJobStore = create<JobStore>()(
           updated_date: 120,
           link: 90,
         },
+        columnOrder: ['select', 'type', 'company', 'title', 'department', 'location', 'updated_date', 'link'],
         selectedRows: [],
+        isAllSelected: false,
 
         // 设置数据
         setJobs: (jobs, total) =>
@@ -213,29 +220,50 @@ export const useJobStore = create<JobStore>()(
             },
           })),
 
-        // 切换行选择
+        // 更新列顺序
+        updateColumnOrder: (columnOrder) =>
+          set({
+            columnOrder,
+          }),
+
+        // 切换单行选择
         toggleRowSelection: (rowId) =>
           set((state) => {
             const isSelected = state.selectedRows.includes(rowId)
-            if (isSelected) {
+            const newSelected = isSelected
+              ? state.selectedRows.filter((id) => id !== rowId)
+              : [...state.selectedRows, rowId]
+            return {
+              selectedRows: newSelected,
+              isAllSelected: newSelected.length === state.filteredJobs.length && state.filteredJobs.length > 0,
+            }
+          }),
+
+        // 切换全选
+        toggleAllRows: () =>
+          set((state) => {
+            if (state.isAllSelected) {
               return {
-                selectedRows: state.selectedRows.filter((id) => id !== rowId),
+                selectedRows: [],
+                isAllSelected: false,
               }
             } else {
               return {
-                selectedRows: [...state.selectedRows, rowId],
+                selectedRows: state.filteredJobs.map((job) => job.id),
+                isAllSelected: true,
               }
             }
           }),
 
         // 清除行选择
-        clearRowSelection: () => set({ selectedRows: [] }),
+        clearRowSelection: () => set({ selectedRows: [], isAllSelected: false }),
       }),
       {
         name: 'job-store',
         // 只持久化 UI 状态，不持久化数据
         partialize: (state) => ({
           columnWidths: state.columnWidths,
+          columnOrder: state.columnOrder,
           sortBy: state.sortBy,
           sortDir: state.sortDir,
         }),

@@ -5,7 +5,8 @@ import { useJobStore } from '@/lib/stores/job-store'
 import { TableHeader } from './table-header'
 import { TableBody } from './table-body'
 import { JobFilters } from './job-filters'
-import { ExternalLink, Loader2 } from 'lucide-react'
+import { ExternalLink, Loader2, Download, Mail, Share2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function JobTable() {
   const [loading, setLoading] = useState(true)
@@ -20,6 +21,8 @@ export function JobTable() {
     pageSize,
     setJobs,
     setPage,
+    selectedRows,
+    clearRowSelection,
   } = useJobStore()
 
   // 计算分页
@@ -90,6 +93,34 @@ export function JobTable() {
     <div className="space-y-4">
       {/* 筛选组件 */}
       <JobFilters />
+
+      {/* 批量操作栏 */}
+      {selectedRows.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-blue-900">
+              已选择 <span className="text-blue-600 font-bold">{selectedRows.length}</span> 个岗位
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="text-sm">
+              <Download className="h-4 w-4 mr-1" />
+              导出
+            </Button>
+            <Button variant="outline" size="sm" className="text-sm">
+              <Mail className="h-4 w-4 mr-1" />
+              发送邮件
+            </Button>
+            <Button variant="outline" size="sm" className="text-sm">
+              <Share2 className="h-4 w-4 mr-1" />
+              分享
+            </Button>
+            <Button variant="ghost" size="sm" onClick={clearRowSelection} className="text-sm text-gray-600">
+              取消选择
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* 结果统计 */}
       <div className="flex items-center justify-between text-sm text-gray-600">
