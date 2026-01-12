@@ -59,9 +59,37 @@ export function S2Table() {
 
   if (error) {
     return (
-      <div className="w-full p-8 bg-white rounded-lg border">
-        <div className="text-red-500 text-center">
-          加载失败: {error}
+      <div className="w-full h-[calc(100vh-140px)] flex items-center justify-center bg-white rounded-lg border">
+        <div className="text-center max-w-md">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="text-red-600 font-medium mb-2">加载失败</div>
+          <div className="text-gray-600 text-sm">{error}</div>
+        </div>
+      </div>
+    )
+  }
+
+  // 空状态
+  if (jobs.length === 0) {
+    return (
+      <div className="w-full h-[calc(100vh-140px)] flex items-center justify-center bg-white rounded-lg border">
+        <div className="text-center max-w-md px-6">
+          <div className="text-gray-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div className="text-gray-700 font-medium mb-2">暂无数据</div>
+          <div className="text-gray-600 text-sm mb-4">
+            岗位信息库正在同步中，请稍后再试
+          </div>
+          <div className="text-xs text-gray-500">
+            如需手动同步，请联系管理员访问 /admin/sync
+          </div>
         </div>
       </div>
     )
