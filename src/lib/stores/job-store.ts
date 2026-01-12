@@ -60,214 +60,209 @@ interface JobStore {
   clearRowSelection: () => void
 }
 
+// Store 配置
+const storeConfig: any = (set: any, get: any) => ({
+  // 初始状态
+  jobs: [],
+  filteredJobs: [],
+  total: 0,
+  filters: {},
+  activeFilters: false,
+  sortBy: 'updated_date',
+  sortDir: 'desc',
+  page: 1,
+  pageSize: 20,
+  columnWidths: {
+    select: 50,
+    type: 130,
+    company: 150,
+    title: 300,
+    department: 160,
+    location: 110,
+    updated_date: 120,
+    link: 90,
+  },
+  columnOrder: ['select', 'type', 'company', 'title', 'department', 'location', 'updated_date', 'link'],
+  selectedRows: [],
+  isAllSelected: false,
+
+  // 设置数据
+  setJobs: (jobs: Job[], total: number) =>
+    set({
+      jobs,
+      total,
+      filteredJobs: jobs,
+    }),
+
+  // 设置筛选
+  setFilters: (filters: JobFilters) =>
+    set((state: JobStore) => {
+      const newFilters = { ...state.filters, ...filters }
+
+      // 检查是否有激活的过滤器
+      const hasActiveFilters =
+        (newFilters.keyword && newFilters.keyword.trim() !== '') ||
+        (newFilters.types && newFilters.types.length > 0) ||
+        (newFilters.companies && newFilters.companies.length > 0) ||
+        (newFilters.departments && newFilters.departments.length > 0) ||
+        (newFilters.locations && newFilters.locations.length > 0)
+
+      // 应用筛选
+      let filtered = state.jobs
+
+      // 关键词搜索
+      if (newFilters.keyword && newFilters.keyword.trim() !== '') {
+        const keyword = newFilters.keyword.toLowerCase().trim()
+        filtered = filtered.filter((job) => {
+          return (
+            job.company?.toLowerCase().includes(keyword) ||
+            job.title?.toLowerCase().includes(keyword) ||
+            job.type?.toLowerCase().includes(keyword) ||
+            job.department?.toLowerCase().includes(keyword) ||
+            job.location?.toLowerCase().includes(keyword)
+          )
+        })
+      }
+
+      // 行业类型筛选
+      if (newFilters.types && newFilters.types.length > 0) {
+        filtered = filtered.filter((job) => newFilters.types!.includes(job.type))
+      }
+
+      // 公司筛选
+      if (newFilters.companies && newFilters.companies.length > 0) {
+        filtered = filtered.filter((job) => newFilters.companies!.includes(job.company))
+      }
+
+      // 部门筛选
+      if (newFilters.departments && newFilters.departments.length > 0) {
+        filtered = filtered.filter((job) => job.department && newFilters.departments!.includes(job.department))
+      }
+
+      // 地点筛选
+      if (newFilters.locations && newFilters.locations.length > 0) {
+        filtered = filtered.filter((job) => job.location && newFilters.locations!.includes(job.location))
+      }
+
+      // 应用排序
+      if (state.sortBy && state.sortDir) {
+        filtered = [...filtered].sort((a, b) => {
+          const aVal = a[state.sortBy as keyof Job] || ''
+          const bVal = b[state.sortBy as keyof Job] || ''
+          if (state.sortDir === 'asc') {
+            return aVal > bVal ? 1 : -1
+          } else {
+            return aVal < bVal ? 1 : -1
+          }
+        })
+      }
+
+      return {
+        filters: newFilters,
+        activeFilters: hasActiveFilters,
+        filteredJobs: filtered,
+        page: 1,
+      }
+    }),
+
+  // 清除筛选
+  clearFilters: () =>
+    set((state: JobStore) => ({
+      filters: {},
+      activeFilters: false,
+      filteredJobs: state.jobs,
+      page: 1,
+    })),
+
+  // 设置排序
+  setSort: (sortBy: string, sortDir: SortDirection) =>
+    set((state: JobStore) => {
+      let sorted = [...state.filteredJobs]
+
+      if (sortDir) {
+        sorted.sort((a, b) => {
+          const aVal = a[sortBy as keyof Job] || ''
+          const bVal = b[sortBy as keyof Job] || ''
+          if (sortDir === 'asc') {
+            return aVal > bVal ? 1 : -1
+          } else {
+            return aVal < bVal ? 1 : -1
+          }
+        })
+      }
+
+      return {
+        sortBy,
+        sortDir,
+        filteredJobs: sorted,
+      }
+    }),
+
+  // 设置分页
+  setPage: (page: number) => set({ page }),
+
+  // 更新列宽
+  updateColumnWidth: (columnId: string, width: number) =>
+    set((state: JobStore) => ({
+      columnWidths: {
+        ...state.columnWidths,
+        [columnId]: width,
+      },
+    })),
+
+  // 更新列顺序
+  updateColumnOrder: (columnOrder: string[]) =>
+    set({
+      columnOrder,
+    }),
+
+  // 切换单行选择
+  toggleRowSelection: (rowId: string) =>
+    set((state: JobStore) => {
+      const isSelected = state.selectedRows.includes(rowId)
+      const newSelected = isSelected ? state.selectedRows.filter((id) => id !== rowId) : [...state.selectedRows, rowId]
+      return {
+        selectedRows: newSelected,
+        isAllSelected: newSelected.length === state.filteredJobs.length && state.filteredJobs.length > 0,
+      }
+    }),
+
+  // 切换全选
+  toggleAllRows: () =>
+    set((state: JobStore) => {
+      if (state.isAllSelected) {
+        return {
+          selectedRows: [],
+          isAllSelected: false,
+        }
+      } else {
+        return {
+          selectedRows: state.filteredJobs.map((job) => job.id),
+          isAllSelected: true,
+        }
+      }
+    }),
+
+  // 清除行选择
+  clearRowSelection: () => set({ selectedRows: [], isAllSelected: false }),
+})
+
+// 持久化配置
+const persistConfig = {
+  name: 'job-store',
+  partialize: (state: JobStore) => ({
+    columnWidths: state.columnWidths,
+    columnOrder: state.columnOrder,
+    sortBy: state.sortBy,
+    sortDir: state.sortDir,
+  }),
+}
+
+// 创建 store
 export const useJobStore = create<JobStore>()(
   devtools(
-    persist(
-      (set, get) => ({
-        // 初始状态
-        jobs: [],
-        filteredJobs: [],
-        total: 0,
-        filters: {},
-        activeFilters: false,
-        sortBy: 'updated_date',
-        sortDir: 'desc',
-        page: 1,
-        pageSize: 20,
-        columnWidths: {
-          select: 50,
-          type: 130,
-          company: 150,
-          title: 300,
-          department: 160,
-          location: 110,
-          updated_date: 120,
-          link: 90,
-        },
-        columnOrder: ['select', 'type', 'company', 'title', 'department', 'location', 'updated_date', 'link'],
-        selectedRows: [],
-        isAllSelected: false,
-
-        // 设置数据
-        setJobs: (jobs, total) =>
-          set({
-            jobs,
-            total,
-            filteredJobs: jobs, // 初始时显示所有数据
-          }),
-
-        // 设置筛选
-        setFilters: (filters) =>
-          set((state) => {
-            const newFilters = { ...state.filters, ...filters }
-
-            // 检查是否有激活的过滤器
-            const hasActiveFilters =
-              (newFilters.keyword && newFilters.keyword.trim() !== '') ||
-              (newFilters.types && newFilters.types.length > 0) ||
-              (newFilters.companies && newFilters.companies.length > 0) ||
-              (newFilters.departments && newFilters.departments.length > 0) ||
-              (newFilters.locations && newFilters.locations.length > 0)
-
-            // 应用筛选
-            let filtered = state.jobs
-
-            // 关键词搜索（公司名、岗位名称）
-            if (newFilters.keyword && newFilters.keyword.trim() !== '') {
-              const keyword = newFilters.keyword.toLowerCase().trim()
-              filtered = filtered.filter((job) => {
-                return (
-                  job.company?.toLowerCase().includes(keyword) ||
-                  job.title?.toLowerCase().includes(keyword) ||
-                  job.type?.toLowerCase().includes(keyword) ||
-                  job.department?.toLowerCase().includes(keyword) ||
-                  job.location?.toLowerCase().includes(keyword)
-                )
-              })
-            }
-
-            // 行业类型筛选（多选）
-            if (newFilters.types && newFilters.types.length > 0) {
-              filtered = filtered.filter((job) =>
-                newFilters.types!.includes(job.type)
-              )
-            }
-
-            // 公司筛选（多选）
-            if (newFilters.companies && newFilters.companies.length > 0) {
-              filtered = filtered.filter((job) =>
-                newFilters.companies!.includes(job.company)
-              )
-            }
-
-            // 部门筛选（多选）
-            if (newFilters.departments && newFilters.departments.length > 0) {
-              filtered = filtered.filter((job) =>
-                job.department && newFilters.departments!.includes(job.department)
-              )
-            }
-
-            // 地点筛选（多选）
-            if (newFilters.locations && newFilters.locations.length > 0) {
-              filtered = filtered.filter((job) =>
-                job.location && newFilters.locations!.includes(job.location)
-              )
-            }
-
-            // 应用排序
-            if (state.sortBy && state.sortDir) {
-              filtered = [...filtered].sort((a, b) => {
-                const aVal = a[state.sortBy as keyof Job] || ''
-                const bVal = b[state.sortBy as keyof Job] || ''
-                if (state.sortDir === 'asc') {
-                  return aVal > bVal ? 1 : -1
-                } else {
-                  return aVal < bVal ? 1 : -1
-                }
-              })
-            }
-
-            return {
-              filters: newFilters,
-              activeFilters: hasActiveFilters,
-              filteredJobs: filtered,
-              page: 1, // 重置到第一页
-            }
-          }),
-
-        // 清除筛选
-        clearFilters: () =>
-          set((state) => ({
-            filters: {},
-            activeFilters: false,
-            filteredJobs: state.jobs,
-            page: 1,
-          })),
-
-        // 设置排序
-        setSort: (sortBy, sortDir) =>
-          set((state) => {
-            let sorted = [...state.filteredJobs]
-
-            if (sortDir) {
-              sorted.sort((a, b) => {
-                const aVal = a[sortBy as keyof Job] || ''
-                const bVal = b[sortBy as keyof Job] || ''
-                if (sortDir === 'asc') {
-                  return aVal > bVal ? 1 : -1
-                } else {
-                  return aVal < bVal ? 1 : -1
-                }
-              })
-            }
-
-            return {
-              sortBy,
-              sortDir,
-              filteredJobs: sorted,
-            }
-          }),
-
-        // 设置分页
-        setPage: (page) => set({ page }),
-
-        // 更新列宽
-        updateColumnWidth: (columnId, width) =>
-          set((state) => ({
-            columnWidths: {
-              ...state.columnWidths,
-              [columnId]: width,
-            },
-          })),
-
-        // 更新列顺序
-        updateColumnOrder: (columnOrder) =>
-          set({
-            columnOrder,
-          }),
-
-        // 切换单行选择
-        toggleRowSelection: (rowId) =>
-          set((state) => {
-            const isSelected = state.selectedRows.includes(rowId)
-            const newSelected = isSelected
-              ? state.selectedRows.filter((id) => id !== rowId)
-              : [...state.selectedRows, rowId]
-            return {
-              selectedRows: newSelected,
-              isAllSelected: newSelected.length === state.filteredJobs.length && state.filteredJobs.length > 0,
-            }
-          }),
-
-        // 切换全选
-        toggleAllRows: () =>
-          set((state) => {
-            if (state.isAllSelected) {
-              return {
-                selectedRows: [],
-                isAllSelected: false,
-              }
-            } else {
-              return {
-                selectedRows: state.filteredJobs.map((job) => job.id),
-                isAllSelected: true,
-              }
-            }
-          }),
-
-        // 清除行选择
-        clearRowSelection: () => set({ selectedRows: [], isAllSelected: false }),
-      }),
-      {
-        name: 'job-store',
-        // 只持久化 UI 状态，不持久化数据
-        partialize: (state) => ({
-          columnWidths: state.columnWidths,
-          columnOrder: state.columnOrder,
-          sortBy: state.sortBy,
-          sortDir: state.sortDir,
-        }),
-      }
-    )
+    typeof window !== 'undefined'
+      ? persist(storeConfig, persistConfig)
+      : storeConfig
   )
 )

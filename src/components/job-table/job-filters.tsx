@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Search, X, Filter } from 'lucide-react'
-import { useJobStore, JobFilters } from '@/lib/stores/job-store'
+import { useJobStore, type JobFilters } from '@/lib/stores/job-store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -15,8 +15,8 @@ export function JobFilters() {
 
   const uniqueTypes = Array.from(new Set(jobs.map((j) => j.type).filter(Boolean)))
   const uniqueCompanies = Array.from(new Set(jobs.map((j) => j.company).filter(Boolean)))
-  const uniqueLocations = Array.from(new Set(jobs.map((j) => j.location).filter(Boolean)))
-  const uniqueDepartments = Array.from(new Set(jobs.map((j) => j.department).filter(Boolean)))
+  const uniqueLocations = Array.from(new Set(jobs.map((j) => j.location).filter((l): l is string => Boolean(l))))
+  const uniqueDepartments = Array.from(new Set(jobs.map((j) => j.department).filter((d): d is string => Boolean(d))))
 
   const handleKeywordChange = (value: string) => {
     setLocalKeyword(value)
