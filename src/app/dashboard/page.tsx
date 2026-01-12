@@ -70,8 +70,14 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-blue-50">
       <Header user={user} />
+
+      {/* 无法忽略的红色横幅 */}
+      <div className="bg-red-600 text-white text-center py-4 px-4 font-bold text-xl">
+        ⚠️ NEW VERSION ALERT: 如果你看到这个红色横幅，说明新代码已部署！
+      </div>
+
       <main className="container mx-auto px-2 py-4">
-        {/* 明显的视觉提示 - 背景变成蓝色 */}
+        {/* 明确的视觉提示 */}
         <div className="mb-3 px-2 flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold text-blue-900">🎉 NEW: 岗位列表 (AntV S2)</h1>
@@ -80,6 +86,13 @@ export default async function DashboardPage() {
           <div className="text-sm font-bold text-blue-600 bg-white px-3 py-1 rounded-full">
             ✨ AntV S2 Active
           </div>
+        </div>
+
+        {/* 绿色提示框 */}
+        <div className="bg-green-100 border-4 border-green-500 p-4 mb-4 rounded-lg">
+          <h2 className="text-lg font-bold text-green-800">✅ S2 组件区域</h2>
+          <p className="text-green-700 text-sm">下方的表格应该由 AntV S2 渲染，而不是飞书 iframe</p>
+          <p className="text-green-600 text-xs mt-2">Git commit: ebffe9e</p>
         </div>
 
         <S2Table />
