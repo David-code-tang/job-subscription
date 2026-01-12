@@ -71,9 +71,14 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <Header user={user} />
       <main className="container mx-auto px-2 py-4">
-        <div className="mb-3 px-2">
-          <h1 className="text-xl font-bold">岗位列表</h1>
-          <p className="text-sm text-gray-600">浏览和筛选最新招聘岗位</p>
+        <div className="mb-3 px-2 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold">岗位列表</h1>
+            <p className="text-sm text-gray-600">浏览和筛选最新招聘岗位</p>
+          </div>
+          <div className="text-xs text-gray-400">
+            Powered by AntV S2
+          </div>
         </div>
 
         <S2Table />
