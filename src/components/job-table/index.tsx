@@ -8,13 +8,9 @@ import { Download, Mail, Share2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { exportSelectedJobs, exportFilteredJobs } from '@/lib/utils/export'
 import { useTableKeyboard } from '@/hooks/useTableKeyboard'
-import { TopBarActions } from '@/components/layout/topbar-actions'
 
 export function JobTable() {
   const [exporting, setExporting] = useState(false)
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
-  const [isFieldConfigOpen, setIsFieldConfigOpen] = useState(false)
-  const [isAddFieldOpen, setIsAddFieldOpen] = useState(false)
 
   // 从 store 获取数据和方法
   const {
@@ -96,17 +92,7 @@ export function JobTable() {
   // 空数据状态
   if (currentJobs.length === 0) {
     return (
-      <div className="space-y-4">
-        <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-end">
-          <TopBarActions
-            isFilterDialogOpen={isFilterDialogOpen}
-            setIsFilterDialogOpen={setIsFilterDialogOpen}
-            isFieldConfigOpen={isFieldConfigOpen}
-            setIsFieldConfigOpen={setIsFieldConfigOpen}
-            isAddFieldOpen={isAddFieldOpen}
-            setIsAddFieldOpen={setIsAddFieldOpen}
-          />
-        </div>
+      <div className="h-full flex flex-col justify-center">
         <div className="bg-white border border-gray-200 rounded-lg p-12">
           <div className="flex flex-col items-center justify-center text-center space-y-3">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
@@ -127,22 +113,10 @@ export function JobTable() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* 工具栏 */}
-      <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-end">
-        <TopBarActions
-          isFilterDialogOpen={isFilterDialogOpen}
-          setIsFilterDialogOpen={setIsFilterDialogOpen}
-          isFieldConfigOpen={isFieldConfigOpen}
-          setIsFieldConfigOpen={setIsFieldConfigOpen}
-          isAddFieldOpen={isAddFieldOpen}
-          setIsAddFieldOpen={setIsAddFieldOpen}
-        />
-      </div>
-
-      {/* 批量操作栏 */}
+    <div className="h-full flex flex-col gap-4">
+      {/* 批量操作栏 - 固定 */}
       {selectedRows.length > 0 && (
-        <div className="bg-[#f0f6ff] border border-[#0066ff] rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex-shrink-0 bg-[#f0f6ff] border border-[#0066ff] rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-[#1f2329]">
               已选择 <span className="text-[#0066ff] font-bold">{selectedRows.length}</span> 个岗位
@@ -175,8 +149,8 @@ export function JobTable() {
         </div>
       )}
 
-      {/* 结果统计 */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-[#646a73]">
+      {/* 结果统计 - 固定 */}
+      <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-[#646a73]">
         <span>
           共找到 <span className="font-semibold text-[#1f2329]">{total.toLocaleString()}</span> 个岗位
           {total !== filteredJobs.length && (
@@ -204,8 +178,8 @@ export function JobTable() {
         </div>
       </div>
 
-      {/* 表格 */}
-      <div className="bg-white rounded-lg border border-[#dee2e6] overflow-hidden">
+      {/* 表格 - 可滚动 */}
+      <div className="flex-1 bg-white rounded-lg border border-[#dee2e6] overflow-auto">
         <table className="w-full" style={{ tableLayout: 'fixed' }}>
           <TableHeader />
           <TableBody jobs={currentJobs} />

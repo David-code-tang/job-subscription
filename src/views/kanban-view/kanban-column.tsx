@@ -59,7 +59,7 @@ export function KanbanColumn({ title, jobs, color, onAddJob }: KanbanColumnProps
 
       {/* 卡片列表 */}
       {isExpanded && (
-        <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+        <div className="space-y-2 flex-1 overflow-y-auto pr-1 min-h-0">
           {jobs.length === 0 ? (
             <div className="text-center py-8 text-[#8f959e] text-sm">
               暂无岗位

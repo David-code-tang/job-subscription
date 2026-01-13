@@ -21,7 +21,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* 内容区域 - 根据当前视图渲染不同内容 */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         <ViewRenderer />
       </div>
     </div>

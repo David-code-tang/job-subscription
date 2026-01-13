@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { useJobStore } from '@/lib/stores/job-store'
 import { Badge } from '@/components/ui/badge'
 import { X } from 'lucide-react'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface FilterDialogProps {
   open: boolean
@@ -76,11 +77,12 @@ export function FilterDialog({ open, onOpenChange }: FilterDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>筛选岗位</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <ScrollArea className="max-h-[60vh] pr-4">
+          <div className="grid gap-4 py-4">
           {/* 关键词搜索 */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="filter-keyword" className="text-right">
@@ -197,6 +199,7 @@ export function FilterDialog({ open, onOpenChange }: FilterDialogProps) {
             </div>
           </div>
         </div>
+        </ScrollArea>
         <DialogFooter>
           <Button variant="outline" onClick={handleClearFilter}>
             清除筛选

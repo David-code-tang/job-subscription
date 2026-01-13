@@ -86,7 +86,7 @@ export function KanbanView() {
       </div>
 
       {/* 看板区域 */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
+      <div className="flex-1 overflow-auto p-6">
         <div className="flex gap-4 h-full min-w-min">
           {groupKeys.map((key, index) => (
             <KanbanColumn
