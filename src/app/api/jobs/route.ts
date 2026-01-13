@@ -64,55 +64,131 @@ export async function GET(request: Request) {
   const pageSize = parseInt(searchParams.get('pageSize') || '10000') // 默认获取所有数据
   const offset = (page - 1) * pageSize
 
-  // 从 Supabase 获取数据
-  let query = supabase
-    .from('jobs')
-    .select('*', { count: 'exact' })
+  // 注意：Supabase 默认限制每次查询最多 1000 行
+  // 如果需要获取所有数据，需要分批获取
 
-  // 应用筛选条件
+  // 从 Supabase 获取数据
+  // Supabase 默认限制每次查询最多 1000 行，需要分批获取
+  const BATCH_SIZE = 1000
+  let allJobs: any[] = []
+  let currentOffset = 0
+  let hasMore = true
+  let totalCount = 0
+
+  // 先获取总数
+  const countQuery = supabase.from('jobs').select('*', { count: 'exact', head: true })
+
+  // 应用筛选条件到计数查询
   const type = searchParams.get('type')
   const company = searchParams.get('company')
   const department = searchParams.get('department')
   const location = searchParams.get('location')
   const search = searchParams.get('search')
 
-  if (type) {
-    query = query.eq('type', type)
-  }
-  if (company) {
-    query = query.eq('company', company)
-  }
-  if (department) {
-    query = query.eq('department', department)
-  }
-  if (location) {
-    query = query.eq('location', location)
-  }
-  if (search) {
-    query = query.ilike('title', `%${search}%`)
+  if (type) countQuery.eq('type', type)
+  if (company) countQuery.eq('company', company)
+  if (department) countQuery.eq('department', department)
+  if (location) countQuery.eq('location', location)
+  if (search) countQuery.ilike('title', `%${search}%`)
+
+  const { count: totalCountResult } = await countQuery
+  totalCount = totalCountResult || 0
+
+  // 如果请求的数量小于等于 1000，直接获取
+  if (pageSize <= BATCH_SIZE) {
+    let query = supabase.from('jobs').select('*')
+
+    // 应用筛选条件
+    if (type) query = query.eq('type', type)
+    if (company) query = query.eq('company', company)
+    if (department) query = query.eq('department', department)
+    if (location) query = query.eq('location', location)
+    if (search) query = query.ilike('title', `%${search}%`)
+
+    // 排序
+    const sortBy = searchParams.get('sortBy') || 'updated_date'
+    const sortDir = searchParams.get('sortDir') || 'desc'
+    query = query.order(sortBy, { ascending: sortDir === 'asc', nullsFirst: false })
+
+    // 分页
+    query = query.range(offset, offset + pageSize - 1)
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error fetching jobs:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch jobs' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      jobs: data || [],
+      total: totalCount,
+      page,
+      pageSize,
+    })
   }
 
+  // 否则分批获取所有数据
   // 排序
   const sortBy = searchParams.get('sortBy') || 'updated_date'
   const sortDir = searchParams.get('sortDir') || 'desc'
-  query = query.order(sortBy, { ascending: sortDir === 'asc', nullsFirst: false })
 
-  // 分页
-  query = query.range(offset, offset + pageSize - 1)
+  while (hasMore && allJobs.length < pageSize) {
+    let query = supabase
+      .from('jobs')
+      .select('*')
 
-  const { data, error, count } = await query
+    // 应用筛选条件
+    if (type) query = query.eq('type', type)
+    if (company) query = query.eq('company', company)
+    if (department) query = query.eq('department', department)
+    if (location) query = query.eq('location', location)
+    if (search) query = query.ilike('title', `%${search}%`)
 
-  if (error) {
-    console.error('Error fetching jobs:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch jobs' },
-      { status: 500 }
-    )
+    // 排序
+    query = query.order(sortBy, { ascending: sortDir === 'asc', nullsFirst: false })
+
+    // 分批获取
+    const end = currentOffset + BATCH_SIZE - 1
+    query = query.range(currentOffset, end)
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error fetching jobs batch:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch jobs' },
+        { status: 500 }
+      )
+    }
+
+    if (data && data.length > 0) {
+      allJobs = allJobs.concat(data)
+      currentOffset += BATCH_SIZE
+
+      // 如果返回的数据少于 BATCH_SIZE，说明已经没有更多数据了
+      if (data.length < BATCH_SIZE) {
+        hasMore = false
+      }
+    } else {
+      hasMore = false
+    }
+
+    // 防止无限循环
+    if (allJobs.length >= totalCount) {
+      hasMore = false
+    }
   }
 
+  // 只返回请求的数量
+  const finalJobs = allJobs.slice(0, pageSize)
+
   return NextResponse.json({
-    jobs: data || [],
-    total: count || 0,
+    jobs: finalJobs,
+    total: totalCount,
     page,
     pageSize,
   })

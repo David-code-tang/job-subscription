@@ -53,14 +53,14 @@ export function JobFilters() {
     (filters.departments?.length || 0)
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+    <div className="bg-white border border-[#dee2e6] rounded-lg p-5 space-y-4">
       {/* 标题栏 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">筛选条件</h3>
+          <Filter className="h-5 w-5 text-[#646a73]" />
+          <h3 className="font-semibold text-[#1f2329]">筛选条件</h3>
           {hasActiveFilters && (
-            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            <span className="bg-[#e8f3ff] text-[#0066ff] text-xs font-medium px-2 py-0.5 rounded-full">
               {filterCount} 个条件
             </span>
           )}
@@ -70,7 +70,7 @@ export function JobFilters() {
             variant="ghost"
             size="sm"
             onClick={clearAllFilters}
-            className="text-gray-600 hover:text-gray-900 h-8"
+            className="text-[#646a73] hover:text-[#1f2329] h-8"
           >
             <X className="h-4 w-4 mr-1" />
             清除全部
@@ -80,7 +80,7 @@ export function JobFilters() {
 
       {/* 关键词搜索 */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8f959e]" />
         <Input
           type="text"
           placeholder="搜索关键词（公司名、岗位名称）..."
@@ -94,7 +94,7 @@ export function JobFilters() {
             return () => clearTimeout(timer)
           }}
           onKeyDown={handleKeywordKeyDown}
-          className="pl-9"
+          className="pl-10 h-10 border-[#dee2e6] focus:border-[#0066ff] focus:ring-[#0066ff]"
         />
         {localKeyword && (
           <button
@@ -102,7 +102,7 @@ export function JobFilters() {
               setLocalKeyword('')
               setFilters({ ...filters, keyword: undefined })
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8f959e] hover:text-[#646a73]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -121,10 +121,10 @@ export function JobFilters() {
                 : [...currentTypes, type]
               setFilters({ ...filters, types: newTypes.length ? newTypes : undefined })
             }}
-            className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+            className={`px-3 py-1.5 text-sm rounded-md border transition-all ${
               filters.types?.includes(type)
-                ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                ? 'border-[#0066ff] bg-[#e8f3ff] text-[#0066ff] font-medium'
+                : 'border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6]'
             }`}
           >
             {type}
@@ -137,7 +137,7 @@ export function JobFilters() {
         {/* 公司筛选 */}
         {uniqueCompanies.length > 0 && (
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">公司</label>
+            <label className="text-sm font-medium text-[#646a73] mb-2 block">公司</label>
             <div className="flex flex-wrap gap-2">
               {uniqueCompanies.slice(0, 10).map((company) => (
                 <button
@@ -152,10 +152,10 @@ export function JobFilters() {
                       companies: newCompanies.length ? newCompanies : undefined,
                     })
                   }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  className={`px-3 py-1 text-xs rounded-md border transition-all ${
                     filters.companies?.includes(company)
-                      ? 'bg-purple-50 border-purple-300 text-purple-700 font-medium'
-                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      ? 'border-[#6236ff] bg-[#f5f1ff] text-[#6236ff] font-medium'
+                      : 'border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6]'
                   }`}
                 >
                   {company}
@@ -168,7 +168,7 @@ export function JobFilters() {
         {/* 地点筛选 */}
         {uniqueLocations.length > 0 && (
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">地点</label>
+            <label className="text-sm font-medium text-[#646a73] mb-2 block">地点</label>
             <div className="flex flex-wrap gap-2">
               {uniqueLocations.slice(0, 8).map((location) => (
                 <button
@@ -183,10 +183,10 @@ export function JobFilters() {
                       locations: newLocations.length ? newLocations : undefined,
                     })
                   }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  className={`px-3 py-1 text-xs rounded-md border transition-all ${
                     filters.locations?.includes(location)
-                      ? 'bg-green-50 border-green-300 text-green-700 font-medium'
-                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      ? 'border-[#00a670] bg-[#e8ffea] text-[#00a670] font-medium'
+                      : 'border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6]'
                   }`}
                 >
                   {location}
@@ -199,7 +199,7 @@ export function JobFilters() {
         {/* 部门筛选 */}
         {uniqueDepartments.length > 0 && (
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">部门</label>
+            <label className="text-sm font-medium text-[#646a73] mb-2 block">部门</label>
             <div className="flex flex-wrap gap-2">
               {uniqueDepartments.slice(0, 8).map((dept) => (
                 <button
@@ -214,10 +214,10 @@ export function JobFilters() {
                       departments: newDepts.length ? newDepts : undefined,
                     })
                   }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  className={`px-3 py-1 text-xs rounded-md border transition-all ${
                     filters.departments?.includes(dept)
-                      ? 'bg-orange-50 border-orange-300 text-orange-700 font-medium'
-                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      ? 'border-[#ff8800] bg-[#fff7e8] text-[#ff8800] font-medium'
+                      : 'border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6]'
                   }`}
                 >
                   {dept}
@@ -230,8 +230,8 @@ export function JobFilters() {
 
       {/* 结果统计 */}
       {hasActiveFilters && (
-        <div className="pt-2 border-t text-sm text-gray-600">
-          找到 <span className="font-semibold text-gray-900">{total}</span> 个岗位
+        <div className="pt-2 border-t text-sm text-[#646a73]">
+          找到 <span className="font-semibold text-[#1f2329]">{total}</span> 个岗位
         </div>
       )}
     </div>

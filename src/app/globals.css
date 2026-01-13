@@ -79,6 +79,19 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* 飞书风格色彩系统 */
+  --feishu-blue: #0066ff;
+  --feishu-blue-hover: #0052cc;
+  --feishu-blue-light: #e8f3ff;
+  --feishu-blue-lighter: #f0f6ff;
+  --feishu-gray-50: #f5f6f7;
+  --feishu-gray-100: #e4e7ed;
+  --feishu-gray-200: #dee2e6;
+  --feishu-gray-300: #cdd0d6;
+  --feishu-gray-400: #8f959e;
+  --feishu-gray-500: #646a73;
+  --feishu-gray-900: #1f2329;
 }
 
 .dark {

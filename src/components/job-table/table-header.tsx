@@ -14,6 +14,7 @@ interface ColumnConfig {
   sortable: boolean
 }
 
+// 兼容旧接口的默认列配置
 const allColumns: ColumnConfig[] = [
   { key: 'select', label: '', width: 50, sortable: false },
   { key: 'type', label: '行业', width: 130, sortable: true },
@@ -25,36 +26,49 @@ const allColumns: ColumnConfig[] = [
   { key: 'link', label: '申请链接', width: 90, sortable: false },
 ]
 
+// 从 visibleFields 转换为 ColumnConfig 的辅助函数
+function convertFieldToColumn(field: { id: string; name: string; width: number }): ColumnConfig {
+  return {
+    key: field.id,
+    label: field.name,
+    width: field.width,
+    sortable: true,
+  }
+}
+
 // 可拖拽的列头组件
 interface DraggableHeaderProps {
   col: ColumnConfig
   onSort: (key: string) => void
   onResizeStart: (key: string, startX: number) => void
+  isFrozen: boolean
+  frozenLeft?: number
 }
 
-function DraggableHeader({ col, onSort, onResizeStart }: DraggableHeaderProps) {
+function DraggableHeader({ col, onSort, onResizeStart, isFrozen, frozenLeft }: DraggableHeaderProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: col.key,
   })
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    ...(isFrozen ? { position: 'sticky', left: `${frozenLeft}px`, zIndex: 10, backgroundColor: '#f5f6f7' } : {}),
   }
 
   return (
     <th
       ref={setNodeRef}
       style={style}
-      className={`relative px-4 py-3 text-left text-sm font-medium text-gray-900 select-none border-b ${
-        col.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
-      }`}
+      className={`relative px-4 py-3 text-left text-sm font-medium text-[#1f2329] select-none border-b border-b-[#dee2e6] ${
+        col.sortable ? 'cursor-pointer hover:bg-[#f5f6f7]' : ''
+      } ${isFrozen ? 'sticky border-r border-r-[#dee2e6]' : ''}`}
     >
       <div className="flex items-center gap-2">
         {/* 拖拽手柄 */}
         <button
-          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+          className="cursor-grab active:cursor-grabbing text-[#8f959e] hover:text-[#646a73] transition-colors"
           {...attributes}
           {...listeners}
         >
@@ -86,7 +100,7 @@ function DraggableHeader({ col, onSort, onResizeStart }: DraggableHeaderProps) {
       {/* 列宽调整手柄 */}
       {col.key !== 'select' && col.key !== 'link' && (
         <div
-          className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
+          className="absolute right-0 top-0 h-full w-0.5 bg-transparent hover:bg-[#0066ff] cursor-col-resize transition-colors"
           onMouseDown={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -115,7 +129,7 @@ function SelectAllCheckbox() {
           }
         }}
         onChange={toggleAllRows}
-        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+        className="w-5 h-5 rounded border-[#dee2e6] text-[#0066ff] focus:ring-[#0066ff] focus:ring-offset-0 cursor-pointer"
       />
     </div>
   )
@@ -126,16 +140,16 @@ function SortIcon({ columnKey }: { columnKey: string }) {
   const { sortBy, sortDir } = useJobStore()
 
   if (sortBy !== columnKey) {
-    return <ArrowUpDown className="h-3 w-3 text-gray-400" />
+    return <ArrowUpDown className="h-3.5 w-3.5 text-[#8f959e]" />
   }
   if (sortDir === 'asc') {
-    return <ArrowUp className="h-3 w-3 text-blue-600" />
+    return <ArrowUp className="h-3.5 w-3.5 text-[#0066ff]" />
   }
-  return <ArrowDown className="h-3 w-3 text-blue-600" />
+  return <ArrowDown className="h-3.5 w-3.5 text-[#0066ff]" />
 }
 
 export function TableHeader() {
-  const { sortBy, sortDir, columnWidths, columnOrder, setSort, updateColumnWidth, updateColumnOrder } = useJobStore()
+  const { sortBy, sortDir, columnWidths, columnOrder, frozenColumns, visibleFields, setSort, updateColumnWidth, updateColumnOrder } = useJobStore()
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -199,22 +213,50 @@ export function TableHeader() {
     document.addEventListener('mouseup', handleMouseUp)
   }
 
+  // ✅ 修改：使用 visibleFields 而不是硬编码的 allColumns
+  // 优先使用 visibleFields，如果为空则回退到 allColumns
+  const columnsSource = visibleFields && visibleFields.length > 0
+    ? visibleFields.filter(f => f.visible).map(convertFieldToColumn)
+    : allColumns
+
   // 根据 columnOrder 过滤并排序列
-  const orderedColumns = columnOrder.map((key) => allColumns.find((col) => col.key === key)!).filter(Boolean)
+  const orderedColumns = columnOrder
+    .map((key) => columnsSource.find((col) => col.key === key))
+    .filter(Boolean)
+
+  // 计算冻结列的左侧偏移量
+  let frozenLeft = 0
+  const frozenLeftMap: Record<string, number> = {}
+
+  orderedColumns.forEach((col) => {
+    if (col && frozenColumns.includes(col.key)) {
+      frozenLeftMap[col.key] = frozenLeft
+      frozenLeft += columnWidths[col.key]
+    }
+  })
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <thead className="bg-gray-50">
+      <thead className="bg-[#f5f6f7] border-b border-[#dee2e6]">
         <tr>
           <SortableContext items={columnOrder} strategy={verticalListSortingStrategy}>
-            {orderedColumns.map((col) => (
-              <th
-                key={col.key}
-                style={{ width: `${columnWidths[col.key]}px` }}
-              >
-                <DraggableHeader col={col} onSort={handleSort} onResizeStart={handleMouseDown} />
-              </th>
-            ))}
+            {orderedColumns.map((col) => {
+              if (!col) return null
+              return (
+                <th
+                  key={col.key}
+                  style={{ width: `${columnWidths[col.key]}px` }}
+                >
+                  <DraggableHeader
+                    col={col}
+                    onSort={handleSort}
+                    onResizeStart={handleMouseDown}
+                    isFrozen={frozenColumns.includes(col.key)}
+                    frozenLeft={frozenLeftMap[col.key]}
+                  />
+                </th>
+              )
+            })}
           </SortableContext>
         </tr>
       </thead>

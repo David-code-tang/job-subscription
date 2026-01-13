@@ -1,19 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useJobStore } from '@/lib/stores/job-store'
 import { TableHeader } from './table-header'
 import { TableBody } from './table-body'
-import { TableSkeleton } from './table-skeleton'
 import { JobFilters } from './job-filters'
-import { ExternalLink, Loader2, Download, Mail, Share2, RefreshCw, AlertCircle } from 'lucide-react'
+import { Download, Mail, Share2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { exportSelectedJobs, exportFilteredJobs } from '@/lib/utils/export'
+import { useTableKeyboard } from '@/hooks/useTableKeyboard'
 
 export function JobTable() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
   const [exporting, setExporting] = useState(false)
 
   // 从 store 获取数据和方法
@@ -23,56 +20,19 @@ export function JobTable() {
     total,
     page,
     pageSize,
-    setJobs,
     setPage,
     selectedRows,
     clearRowSelection,
   } = useJobStore()
+
+  // 只在表格视图下启用键盘快捷键
+  useTableKeyboard()
 
   // 计算分页
   const totalPages = Math.ceil(filteredJobs.length / pageSize)
   const startIndex = (page - 1) * pageSize
   const endIndex = startIndex + pageSize
   const currentJobs = filteredJobs.slice(startIndex, endIndex)
-
-  // 获取数据
-  useEffect(() => {
-    async function fetchJobs() {
-      try {
-        const response = await fetch('/api/jobs')
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            window.location.href = '/login?redirect=/dashboard'
-            return
-          }
-          if (response.status === 403) {
-            window.location.href = '/pricing'
-            return
-          }
-          throw new Error('Failed to load jobs')
-        }
-
-        const data = await response.json()
-        setJobs(data.jobs || [], data.total || 0)
-        setError(null)
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-        setError(errorMessage)
-        console.error('Failed to fetch jobs:', errorMessage)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchJobs()
-  }, [setJobs, retryCount])
-
-  const handleRetry = () => {
-    setLoading(true)
-    setError(null)
-    setRetryCount((prev) => prev + 1)
-  }
 
   // 导出选中的岗位
   const handleExportSelected = async () => {
@@ -130,40 +90,6 @@ export function JobTable() {
     }
   }
 
-  // 加载状态 - 使用骨架屏
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <JobFilters />
-        <TableSkeleton />
-      </div>
-    )
-  }
-
-  // 错误状态
-  if (error) {
-    return (
-      <div className="space-y-4">
-        <JobFilters />
-        <div className="bg-white border border-red-200 rounded-lg p-8">
-          <div className="flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="h-8 w-8 text-red-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">加载失败</h3>
-              <p className="text-sm text-gray-600 mt-1">{error}</p>
-            </div>
-            <Button onClick={handleRetry} variant="outline" className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              重试
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   // 空数据状态
   if (currentJobs.length === 0) {
     return (
@@ -195,17 +121,17 @@ export function JobTable() {
 
       {/* 批量操作栏 */}
       {selectedRows.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="bg-[#f0f6ff] border border-[#0066ff] rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-blue-900">
-              已选择 <span className="text-blue-600 font-bold">{selectedRows.length}</span> 个岗位
+            <span className="text-sm font-medium text-[#1f2329]">
+              已选择 <span className="text-[#0066ff] font-bold">{selectedRows.length}</span> 个岗位
             </span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
-              className="text-sm"
+              className="h-8 text-sm border-[#0066ff] text-[#0066ff] hover:bg-[#e8f3ff]"
               onClick={handleExportSelected}
               disabled={exporting}
             >
@@ -215,13 +141,13 @@ export function JobTable() {
             <Button
               variant="outline"
               size="sm"
-              className="text-sm"
+              className="h-8 text-sm border-[#0066ff] text-[#0066ff] hover:bg-[#e8f3ff]"
               onClick={handleCopyLinks}
             >
               <Share2 className="h-4 w-4 mr-1" />
               复制链接
             </Button>
-            <Button variant="ghost" size="sm" onClick={clearRowSelection} className="text-sm text-gray-600">
+            <Button variant="ghost" size="sm" onClick={clearRowSelection} className="text-sm text-[#646a73] hover:text-[#1f2329] h-8">
               取消选择
             </Button>
           </div>
@@ -229,11 +155,11 @@ export function JobTable() {
       )}
 
       {/* 结果统计 */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-[#646a73]">
         <span>
-          共找到 <span className="font-semibold">{total.toLocaleString()}</span> 个岗位
+          共找到 <span className="font-semibold text-[#1f2329]">{total.toLocaleString()}</span> 个岗位
           {total !== filteredJobs.length && (
-            <span className="ml-2 text-gray-400">
+            <span className="ml-2 text-[#8f959e]">
               （筛选后 {filteredJobs.length.toLocaleString()} 条）
             </span>
           )}
@@ -246,7 +172,7 @@ export function JobTable() {
             <Button
               variant="outline"
               size="sm"
-              className="text-sm"
+              className="text-sm border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6]"
               onClick={handleExportAll}
               disabled={exporting}
             >
@@ -258,7 +184,7 @@ export function JobTable() {
       </div>
 
       {/* 表格 */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-white rounded-lg border border-[#dee2e6] overflow-hidden">
         <table className="w-full" style={{ tableLayout: 'fixed' }}>
           <TableHeader />
           <TableBody jobs={currentJobs} />
@@ -267,11 +193,11 @@ export function JobTable() {
 
       {/* 分页 */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2 mt-4">
           <button
             onClick={() => setPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm rounded-md border border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             上一页
           </button>
@@ -293,10 +219,10 @@ export function JobTable() {
                 <button
                   key={pageNum}
                   onClick={() => setPage(pageNum)}
-                  className={`w-9 h-9 text-sm border rounded ${
+                  className={`w-9 h-9 text-sm rounded-md transition-all ${
                     pageNum === page
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'hover:bg-gray-50'
+                      ? 'bg-[#0066ff] text-white border-0 font-medium'
+                      : 'bg-white border border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6]'
                   }`}
                 >
                   {pageNum}
@@ -308,7 +234,7 @@ export function JobTable() {
           <button
             onClick={() => setPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm rounded-md border border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             下一页
           </button>
