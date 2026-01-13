@@ -8,6 +8,7 @@ import { Download, Mail, Share2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { exportSelectedJobs, exportFilteredJobs } from '@/lib/utils/export'
 import { useTableKeyboard } from '@/hooks/useTableKeyboard'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export function JobTable() {
   const [exporting, setExporting] = useState(false)
@@ -178,12 +179,14 @@ export function JobTable() {
         </div>
       </div>
 
-      {/* 表格 - 可滚动 */}
-      <div className="flex-1 bg-white rounded-lg border border-[#dee2e6] overflow-auto">
-        <table className="w-full" style={{ tableLayout: 'fixed' }}>
-          <TableHeader />
-          <TableBody jobs={currentJobs} />
-        </table>
+      {/* 表格 - 使用 ScrollArea 实现双向滚动 */}
+      <div className="flex-1 bg-white rounded-lg border border-[#dee2e6]">
+        <ScrollArea className="h-full">
+          <table className="w-full" style={{ tableLayout: 'fixed' }}>
+            <TableHeader />
+            <TableBody jobs={currentJobs} />
+          </table>
+        </ScrollArea>
       </div>
 
       {/* 分页 */}
