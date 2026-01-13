@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useJobStore } from '@/lib/stores/job-store'
 import { KanbanColumn } from './kanban-column'
+import { TopBarActions } from '@/components/layout/topbar-actions'
 
 // 分组字段选项
 type GroupByField = 'department' | 'location' | 'company' | 'type' | null
@@ -25,6 +26,9 @@ const GROUP_COLORS = [
 
 export function KanbanView() {
   const { filteredJobs } = useJobStore()
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
+  const [isFieldConfigOpen, setIsFieldConfigOpen] = useState(false)
+  const [isAddFieldOpen, setIsAddFieldOpen] = useState(false)
 
   // 按部门分组（默认）
   const groupedData = useMemo(() => {
@@ -63,10 +67,20 @@ export function KanbanView() {
             <p className="text-sm text-[#646a73] mt-0.5">按部门分组展示岗位</p>
           </div>
 
-          {/* 分组选择器（暂时简化，后续可扩展） */}
-          <div className="text-sm text-[#646a73]">
-            共 <span className="font-semibold text-[#1f2329]">{filteredJobs.length}</span> 个岗位，
-            <span className="font-semibold text-[#1f2329] ml-1">{groupKeys.length}</span> 个分组
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-[#646a73]">
+              共 <span className="font-semibold text-[#1f2329]">{filteredJobs.length}</span> 个岗位，
+              <span className="font-semibold text-[#1f2329] ml-1">{groupKeys.length}</span> 个分组
+            </div>
+
+            <TopBarActions
+              isFilterDialogOpen={isFilterDialogOpen}
+              setIsFilterDialogOpen={setIsFilterDialogOpen}
+              isFieldConfigOpen={isFieldConfigOpen}
+              setIsFieldConfigOpen={setIsFieldConfigOpen}
+              isAddFieldOpen={isAddFieldOpen}
+              setIsAddFieldOpen={setIsAddFieldOpen}
+            />
           </div>
         </div>
       </div>

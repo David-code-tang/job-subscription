@@ -1,11 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import { KanbanCard } from '../kanban-view/kanban-card'
 import { GalleryCard } from './gallery-card'
 import { useJobStore } from '@/lib/stores/job-store'
+import { TopBarActions } from '@/components/layout/topbar-actions'
 
 export function GalleryView() {
   const { filteredJobs } = useJobStore()
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
+  const [isFieldConfigOpen, setIsFieldConfigOpen] = useState(false)
+  const [isAddFieldOpen, setIsAddFieldOpen] = useState(false)
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
@@ -17,8 +22,19 @@ export function GalleryView() {
             <p className="text-sm text-[#646a73] mt-0.5">卡片网格布局展示岗位</p>
           </div>
 
-          <div className="text-sm text-[#646a73]">
-            共 <span className="font-semibold text-[#1f2329]">{filteredJobs.length}</span> 个岗位
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-[#646a73]">
+              共 <span className="font-semibold text-[#1f2329]">{filteredJobs.length}</span> 个岗位
+            </div>
+
+            <TopBarActions
+              isFilterDialogOpen={isFilterDialogOpen}
+              setIsFilterDialogOpen={setIsFilterDialogOpen}
+              isFieldConfigOpen={isFieldConfigOpen}
+              setIsFieldConfigOpen={setIsFieldConfigOpen}
+              isAddFieldOpen={isAddFieldOpen}
+              setIsAddFieldOpen={setIsAddFieldOpen}
+            />
           </div>
         </div>
       </div>
