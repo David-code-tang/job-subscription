@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useJobStore } from '@/lib/stores/job-store'
 import { TableHeader } from './table-header'
 import { TableBody } from './table-body'
-import { Download, Mail, Share2, AlertCircle } from 'lucide-react'
+import { Download, Share2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { exportSelectedJobs, exportFilteredJobs } from '@/lib/utils/export'
 import { useTableKeyboard } from '@/hooks/useTableKeyboard'
@@ -18,21 +18,12 @@ export function JobTable() {
     jobs,
     filteredJobs,
     total,
-    page,
-    pageSize,
-    setPage,
     selectedRows,
     clearRowSelection,
   } = useJobStore()
 
   // 只在表格视图下启用键盘快捷键
   useTableKeyboard()
-
-  // 计算分页
-  const totalPages = Math.ceil(filteredJobs.length / pageSize)
-  const startIndex = (page - 1) * pageSize
-  const endIndex = startIndex + pageSize
-  const currentJobs = filteredJobs.slice(startIndex, endIndex)
 
   // 导出选中的岗位
   const handleExportSelected = async () => {
@@ -91,7 +82,7 @@ export function JobTable() {
   }
 
   // 空数据状态
-  if (currentJobs.length === 0) {
+  if (filteredJobs.length === 0) {
     return (
       <div className="h-full flex flex-col justify-center">
         <div className="bg-white border border-gray-200 rounded-lg p-12">
@@ -161,9 +152,6 @@ export function JobTable() {
           )}
         </span>
         <div className="flex items-center gap-2">
-          <span>
-            第 {page} 页，共 {totalPages} 页
-          </span>
           {filteredJobs.length > 0 && (
             <Button
               variant="outline"
@@ -179,65 +167,15 @@ export function JobTable() {
         </div>
       </div>
 
-      {/* 表格 - 使用 ScrollArea 实现双向滚动 */}
+      {/* 表格 - 使用 ScrollArea 实现双向滚动，全量渲染所有数据 */}
       <div className="flex-1 bg-white rounded-lg border border-[#dee2e6]">
         <ScrollArea className="h-full">
           <table className="w-full" style={{ tableLayout: 'fixed' }}>
             <TableHeader />
-            <TableBody jobs={currentJobs} />
+            <TableBody jobs={filteredJobs} />
           </table>
         </ScrollArea>
       </div>
-
-      {/* 分页 */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-4">
-          <button
-            onClick={() => setPage(page - 1)}
-            disabled={page <= 1}
-            className="px-4 py-2 text-sm rounded-md border border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            上一页
-          </button>
-
-          <div className="flex items-center gap-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum: number
-              if (totalPages <= 5) {
-                pageNum = i + 1
-              } else if (page <= 3) {
-                pageNum = i + 1
-              } else if (page >= totalPages - 2) {
-                pageNum = totalPages - 4 + i
-              } else {
-                pageNum = page - 2 + i
-              }
-
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setPage(pageNum)}
-                  className={`w-9 h-9 text-sm rounded-md transition-all ${
-                    pageNum === page
-                      ? 'bg-[#0066ff] text-white border-0 font-medium'
-                      : 'bg-white border border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6]'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              )
-            })}
-          </div>
-
-          <button
-            onClick={() => setPage(page + 1)}
-            disabled={page >= totalPages}
-            className="px-4 py-2 text-sm rounded-md border border-[#dee2e6] text-[#646a73] hover:bg-[#f5f6f7] hover:border-[#cdd0d6] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            下一页
-          </button>
-        </div>
-      )}
     </div>
   )
 }
