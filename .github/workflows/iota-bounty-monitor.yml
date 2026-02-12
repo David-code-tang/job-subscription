@@ -1,4 +1,4 @@
-name: IOTA Bounty Monitor
+name: Bounty Monitor
 
 on:
   workflow_dispatch:
@@ -31,10 +31,69 @@ jobs:
           from datetime import datetime, timezone
 
           targets = [
-              {"label": "bounty_498", "issue": 498, "pr": 569},
-              {"label": "bounty_515", "issue": 515, "pr": 570},
-              {"label": "bounty_501", "issue": 501, "pr": 571},
-              {"label": "bounty_510", "issue": 510, "pr": 572},
+              {
+                  "label": "iota_498",
+                  "issue_repo": "iotaledger/iota-rust-sdk",
+                  "issue": 498,
+                  "pr_repo": "iotaledger/iota-rust-sdk",
+                  "pr": 569,
+              },
+              {
+                  "label": "iota_515",
+                  "issue_repo": "iotaledger/iota-rust-sdk",
+                  "issue": 515,
+                  "pr_repo": "iotaledger/iota-rust-sdk",
+                  "pr": 570,
+              },
+              {
+                  "label": "iota_501",
+                  "issue_repo": "iotaledger/iota-rust-sdk",
+                  "issue": 501,
+                  "pr_repo": "iotaledger/iota-rust-sdk",
+                  "pr": 571,
+              },
+              {
+                  "label": "iota_510",
+                  "issue_repo": "iotaledger/iota-rust-sdk",
+                  "issue": 510,
+                  "pr_repo": "iotaledger/iota-rust-sdk",
+                  "pr": 572,
+              },
+              {
+                  "label": "rustchain_123",
+                  "issue_repo": "Scottcjn/rustchain-bounties",
+                  "issue": 123,
+                  "pr_repo": "Scottcjn/Rustchain",
+                  "pr": 115,
+              },
+              {
+                  "label": "rustchain_122_rustchain",
+                  "issue_repo": "Scottcjn/rustchain-bounties",
+                  "issue": 122,
+                  "pr_repo": "Scottcjn/Rustchain",
+                  "pr": 116,
+              },
+              {
+                  "label": "rustchain_122_bottube",
+                  "issue_repo": "Scottcjn/rustchain-bounties",
+                  "issue": 122,
+                  "pr_repo": "Scottcjn/bottube",
+                  "pr": 94,
+              },
+              {
+                  "label": "rustchain_122_ramcoffers",
+                  "issue_repo": "Scottcjn/rustchain-bounties",
+                  "issue": 122,
+                  "pr_repo": "Scottcjn/ram-coffers",
+                  "pr": 1,
+              },
+              {
+                  "label": "rustchain_72_faq",
+                  "issue_repo": "Scottcjn/rustchain-bounties",
+                  "issue": 72,
+                  "pr_repo": "Scottcjn/Rustchain",
+                  "pr": 117,
+              },
           ]
 
           def get(url):
@@ -50,19 +109,21 @@ jobs:
                   return json.loads(resp.read().decode("utf-8"))
 
           now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-          lines = [f"[IOTA Bounty Monitor] {now}"]
+          lines = [f"[Bounty Monitor] {now}"]
           payout_ready = []
 
           for target in targets:
               issue_no = target["issue"]
               pr_no = target["pr"]
               label = target["label"]
+              issue_repo = target["issue_repo"]
+              pr_repo = target["pr_repo"]
 
               issue = get(
-                  f"https://api.github.com/repos/iotaledger/iota-rust-sdk/issues/{issue_no}"
+                  f"https://api.github.com/repos/{issue_repo}/issues/{issue_no}"
               )
               pr = get(
-                  f"https://api.github.com/repos/iotaledger/iota-rust-sdk/pulls/{pr_no}"
+                  f"https://api.github.com/repos/{pr_repo}/pulls/{pr_no}"
               )
 
               issue_state = issue.get("state", "unknown")
@@ -77,7 +138,9 @@ jobs:
               payout_hint = "wait_for_review"
               if pr_merged:
                   payout_hint = "request_bounty_payout_now"
-                  payout_ready.append(f"{label}(issue_{issue_no}/pr_{pr_no})")
+                  payout_ready.append(
+                      f"{label}(issue_{issue_repo}#{issue_no}/pr_{pr_repo}#{pr_no})"
+                  )
               elif pr_state == "closed":
                   payout_hint = "pr_closed_without_merge_check_next_action"
               elif review_comments > 0 or comments > 0:
@@ -95,8 +158,8 @@ jobs:
                       f"pr_{pr_no}_comments={comments}",
                       f"pr_{pr_no}_commits={commits} changed_files={changed_files}",
                       f"payout_action={payout_hint}",
-                      f"issue=https://github.com/iotaledger/iota-rust-sdk/issues/{issue_no}",
-                      f"pr=https://github.com/iotaledger/iota-rust-sdk/pull/{pr_no}",
+                      f"issue=https://github.com/{issue_repo}/issues/{issue_no}",
+                      f"pr=https://github.com/{pr_repo}/pull/{pr_no}",
                   ]
               )
 
