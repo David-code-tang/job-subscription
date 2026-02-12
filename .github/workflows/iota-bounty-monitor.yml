@@ -34,6 +34,7 @@ jobs:
               {"label": "bounty_498", "issue": 498, "pr": 569},
               {"label": "bounty_515", "issue": 515, "pr": 570},
               {"label": "bounty_501", "issue": 501, "pr": 571},
+              {"label": "bounty_510", "issue": 510, "pr": 572},
           ]
 
           def get(url):
