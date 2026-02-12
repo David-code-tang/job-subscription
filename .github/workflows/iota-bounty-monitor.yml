@@ -30,8 +30,10 @@ jobs:
           import urllib.request
           from datetime import datetime, timezone
 
-          issue_url = "https://api.github.com/repos/iotaledger/iota-rust-sdk/issues/498"
-          pr_url = "https://api.github.com/repos/iotaledger/iota-rust-sdk/pulls/569"
+          targets = [
+              {"label": "bounty_498", "issue": 498, "pr": 569},
+              {"label": "bounty_515", "issue": 515, "pr": 570},
+          ]
 
           def get(url):
               req = urllib.request.Request(
@@ -45,40 +47,65 @@ jobs:
               with urllib.request.urlopen(req, timeout=20) as resp:
                   return json.loads(resp.read().decode("utf-8"))
 
-          issue = get(issue_url)
-          pr = get(pr_url)
-
           now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-          issue_state = issue.get("state", "unknown")
-          pr_state = pr.get("state", "unknown")
-          pr_merged = bool(pr.get("merged", False))
-          mergeable_state = pr.get("mergeable_state", "unknown")
-          review_comments = pr.get("review_comments", 0)
-          comments = pr.get("comments", 0)
-          commits = pr.get("commits", 0)
-          changed_files = pr.get("changed_files", 0)
+          lines = [f"[IOTA Bounty Monitor] {now}"]
+          payout_ready = []
 
-          payout_hint = "wait_for_review"
-          if pr_merged:
-              payout_hint = "request_bounty_payout_now"
-          elif pr_state == "closed":
-              payout_hint = "pr_closed_without_merge_check_next_action"
-          elif review_comments > 0 or comments > 0:
-              payout_hint = "review_feedback_available"
+          for target in targets:
+              issue_no = target["issue"]
+              pr_no = target["pr"]
+              label = target["label"]
 
-          lines = [
-              f"[IOTA Bounty Monitor] {now}",
-              f"issue_498_state={issue_state}",
-              f"pr_569_state={pr_state}",
-              f"pr_569_merged={str(pr_merged).lower()}",
-              f"pr_mergeable_state={mergeable_state}",
-              f"pr_review_comments={review_comments}",
-              f"pr_comments={comments}",
-              f"pr_commits={commits} changed_files={changed_files}",
-              f"payout_action={payout_hint}",
-              "issue=https://github.com/iotaledger/iota-rust-sdk/issues/498",
-              "pr=https://github.com/iotaledger/iota-rust-sdk/pull/569",
-          ]
+              issue = get(
+                  f"https://api.github.com/repos/iotaledger/iota-rust-sdk/issues/{issue_no}"
+              )
+              pr = get(
+                  f"https://api.github.com/repos/iotaledger/iota-rust-sdk/pulls/{pr_no}"
+              )
+
+              issue_state = issue.get("state", "unknown")
+              pr_state = pr.get("state", "unknown")
+              pr_merged = bool(pr.get("merged", False))
+              mergeable_state = pr.get("mergeable_state", "unknown")
+              review_comments = pr.get("review_comments", 0)
+              comments = pr.get("comments", 0)
+              commits = pr.get("commits", 0)
+              changed_files = pr.get("changed_files", 0)
+
+              payout_hint = "wait_for_review"
+              if pr_merged:
+                  payout_hint = "request_bounty_payout_now"
+                  payout_ready.append(f"{label}(issue_{issue_no}/pr_{pr_no})")
+              elif pr_state == "closed":
+                  payout_hint = "pr_closed_without_merge_check_next_action"
+              elif review_comments > 0 or comments > 0:
+                  payout_hint = "review_feedback_available"
+
+              lines.extend(
+                  [
+                      "",
+                      f"{label}:",
+                      f"issue_{issue_no}_state={issue_state}",
+                      f"pr_{pr_no}_state={pr_state}",
+                      f"pr_{pr_no}_merged={str(pr_merged).lower()}",
+                      f"pr_{pr_no}_mergeable_state={mergeable_state}",
+                      f"pr_{pr_no}_review_comments={review_comments}",
+                      f"pr_{pr_no}_comments={comments}",
+                      f"pr_{pr_no}_commits={commits} changed_files={changed_files}",
+                      f"payout_action={payout_hint}",
+                      f"issue=https://github.com/iotaledger/iota-rust-sdk/issues/{issue_no}",
+                      f"pr=https://github.com/iotaledger/iota-rust-sdk/pull/{pr_no}",
+                  ]
+              )
+
+          lines.extend(
+              [
+                  "",
+                  "summary:",
+                  f"payout_ready_count={len(payout_ready)}",
+                  f"payout_ready_jobs={', '.join(payout_ready) if payout_ready else 'none'}",
+              ]
+          )
 
           with open("status_message.txt", "w", encoding="utf-8") as f:
               f.write("\n".join(lines))
