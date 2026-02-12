@@ -1,0 +1,83 @@
+name: Telegram Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */2 * * *"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate secrets
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID"
+            exit 1
+          fi
+
+      - name: Build heartbeat message
+        id: heartbeat
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+          from datetime import datetime, timedelta, timezone
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          run_id = os.environ["GITHUB_RUN_ID"]
+          run_url = f"https://github.com/{repo}/actions/runs/{run_id}"
+
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/actions/runs?per_page=20",
+              headers={
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+              },
+          )
+          data = json.loads(urllib.request.urlopen(req, timeout=20).read().decode("utf-8"))
+          now = datetime.now(timezone.utc)
+          cutoff = now - timedelta(hours=8)
+
+          failures = 0
+          for run in data.get("workflow_runs", []):
+              created_at = run.get("created_at", "")
+              status = run.get("conclusion")
+              if not created_at:
+                  continue
+              dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+              if dt >= cutoff and status == "failure":
+                  failures += 1
+
+          lines = [
+              f"[Monitor] {repo}",
+              f"time_utc={now.strftime('%Y-%m-%d %H:%M:%S')}",
+              f"failed_runs_last_8h={failures}",
+              f"run_url={run_url}",
+          ]
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write("message<<EOF\n")
+              f.write("\n".join(lines))
+              f.write("\nEOF\n")
+          PY
+
+      - name: Send Telegram heartbeat
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          MESSAGE: ${{ steps.heartbeat.outputs.message }}
+        run: |
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MESSAGE}" \
+            --data-urlencode "disable_web_page_preview=true"

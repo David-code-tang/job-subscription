@@ -137,6 +137,18 @@ npx tsx scripts/import-csv.ts 新的CSV文件.csv
 
 项目使用 TailwindCSS，可以在 `src/app/globals.css` 中自定义主题。
 
+## Telegram 监控
+
+本仓库已加入自动通知工作流：`/.github/workflows/telegram-monitor.yml`
+
+- 每 2 小时发送一次心跳消息
+- 消息内包含最近 8 小时失败 workflow 数量
+
+需要在仓库 Secrets 中配置：
+
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+
 ## License
 
 MIT
